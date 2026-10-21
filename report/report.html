@@ -1,0 +1,857 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Malawi Road Network – DSA Assignment</title>
+<style>:root { --ink: #1d2a24; --muted: #5d6b64; --line: #cfd8d3; --sign: #146b45; --lake: #a9cbe6; --lake-fg: #2c5f8a;
+  --road: #8f9c95; --route: #d98a00; --mst: #2f6fb3; --surface: #fff; --bg: #f3f5f2; --fg: #1d2a24;
+  --pass: #1d7a45; --fail: #b3261e; }
+* { box-sizing: border-box; }
+body { font: 10.5pt/1.5 "Source Sans 3", "Segoe UI", "DejaVu Sans", Arial, sans-serif; color: var(--ink); margin: 0; }
+h1 { font-size: 24pt; line-height: 1.15; margin: 8px 0 12px; color: var(--sign); }
+h2 { font-size: 15pt; color: var(--sign); border-bottom: 2px solid var(--sign); padding-bottom: 4px; margin: 0 0 10px;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+h2 .q { font-size: 9pt; color: var(--muted); font-weight: 600; }
+h3 { font-size: 11.5pt; margin: 16px 0 6px; }
+section { page-break-before: always; }
+section.cover { page-break-before: auto; }
+.eyebrow { text-transform: uppercase; letter-spacing: .1em; font-size: 9pt; color: var(--muted); margin: 40px 0 0; }
+.lede { font-size: 12pt; color: var(--muted); max-width: 60ch; }
+table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 9pt; page-break-inside: auto; }
+tr { page-break-inside: avoid; }
+th, td { border: 1px solid var(--line); padding: 3px 6px; text-align: left; vertical-align: top; }
+th { background: #eef2ef; font-weight: 600; }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.small { font-size: 8pt; }
+.mono, code, pre { font-family: "DejaVu Sans Mono", Consolas, monospace; }
+code { font-size: 9pt; background: #eef2ef; padding: 0 3px; border-radius: 2px; }
+pre.code { font-size: 8pt; line-height: 1.35; background: #f5f7f6; border: 1px solid var(--line); padding: 8px 10px; white-space: pre-wrap; page-break-inside: auto; }
+pre.code.small { font-size: 7pt; }
+table.compact { font-size: 8.5pt; }
+table.members td, table.members th { padding: 8px 10px; font-size: 11pt; }
+table.links { width: auto; } table.links th { width: 110px; }
+.toc { columns: 2; font-size: 10pt; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0; }
+.stats div { border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+.stats b { display: block; font-size: 18pt; color: var(--sign); }
+.stats span { font-size: 8.5pt; color: var(--muted); }
+tr.target td { background: #fbefd6; }
+tr.stale td, tr.muted td { color: var(--muted); }
+.pill { font-size: 7.5pt; font-weight: 700; padding: 1px 6px; border-radius: 8px; border: 1px solid currentColor; }
+.pill.pass { color: var(--pass); } .pill.fail { color: var(--fail); }
+.result-line { font-weight: 700; font-size: 11pt; }
+.note { font-size: 9pt; color: var(--muted); border-left: 3px solid var(--line); padding-left: 8px; }
+figure { margin: 8px 0; text-align: center; page-break-inside: avoid; }
+figcaption { font-size: 9pt; color: var(--muted); margin-top: 4px; }
+.map { width: 58%; height: auto; }
+.small-map .map { width: 50%; }
+.lake { fill: var(--lake); }
+.lake-label { fill: var(--lake-fg); font: italic 600 17px sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.road { stroke: var(--road); stroke-width: 2.5; }
+.road.off-mst { stroke-dasharray: 4 5; opacity: .6; }
+.road.on-mst { stroke: var(--mst); stroke-width: 5; }
+.road.on-path { stroke: var(--route); stroke-width: 7; }
+.wt rect { fill: #fff; stroke: var(--line); }
+.wt text { fill: #3d4a44; font: 600 12.5px "DejaVu Sans Mono", monospace; text-anchor: middle; }
+.town { fill: #fff; stroke: var(--ink); stroke-width: 2; }
+.town-label { fill: var(--ink); font: 600 18px sans-serif; paint-order: stroke; stroke: #fff; stroke-width: 4px; }
+ul, ol { padding-left: 20px; } li { margin: 3px 0; }
+p { margin: 6px 0; }
+</style></head><body>
+
+<section class="cover">
+  <p class="eyebrow">Data Structures and Algorithms · 2026 Assignment</p>
+  <h1>Shortest Routes and Minimum Spanning Tree on the Malawi Road Network</h1>
+  <p class="lede">A weighted graph of 25 Malawian towns and 38 roads, solved with Dijkstra's algorithm, Kruskal's algorithm and Prim's algorithm, implemented in C++ and deployed as a web application.</p>
+  <h3>Group members</h3>
+  <table class="members"><thead><tr><th>#</th><th>Name</th><th>Registration number</th></tr></thead><tbody>
+  <tr><td>1</td><td>[Member 1 full name]</td><td>[Registration number]</td></tr><tr><td>2</td><td>[Member 2 full name]</td><td>[Registration number]</td></tr><tr><td>3</td><td>[Member 3 full name]</td><td>[Registration number]</td></tr></tbody></table>
+  <table class="links"><tr><th>Source code</th><td>https://github.com/mse23-mkapolo-cpu/DSA</td></tr>
+  <tr><th>Live demo</th><td>https://mse23-mkapolo-cpu.github.io/DSA/</td></tr><tr><th>Date</th><td>November 2026</td></tr></table>
+  <h3>Contents</h3>
+  <ol class="toc">
+    <li>The graph: Malawi road network (Q1)</li><li>Drawing and description of the graph (Q2)</li>
+    <li>How Dijkstra's algorithm works on the graph (Q3)</li><li>Implementation (Q4)</li>
+    <li>Testing and dry run (Q5)</li><li>Does the graph have an MST? (Q6)</li>
+    <li>Which MST algorithm and why (Q7)</li><li>Deployment (Q8)</li><li>Appendix: source code</li>
+  </ol>
+</section>
+
+<section>
+<h2>1. The graph: Malawi road network <span class="q">Q1 · 15 marks</span></h2>
+<p><b>Scenario.</b> The graph models the main road network that links district centres and major towns in all three regions of Malawi. Each <b>vertex</b> is a town and each <b>edge</b> is a road that connects two towns directly, without passing through another town in the graph. The <b>weight</b> of an edge is the road distance in kilometres.</p>
+<p>The graph is <b>undirected</b> because Malawian trunk roads such as the M1, M5 (lakeshore road) and M3 carry traffic both ways, so the distance from A to B equals the distance from B to A. It is <b>weighted</b> because the roads have different lengths, and it is <b>simple</b> (no self loops, at most one road between two towns).</p>
+<p>Distances are approximate, rounded to the nearest 5 km where possible, based on the main routes (for example M1 Lilongwe–Dedza–Ntcheu–Blantyre, M5 Nkhata Bay–Nkhotakota–Salima, M3 Liwonde–Mangochi). They are realistic enough for the algorithms to make the same kind of trade-offs a real traveller would make, which is the purpose of the exercise.</p>
+<div class="stats">
+  <div><b>25</b><span>vertices (towns)</span></div><div><b>38</b><span>edges (roads)</span></div>
+  <div><b>3,854</b><span>km of road in total</span></div><div><b>3</b><span>regions covered</span></div>
+</div>
+<p>Formally <i>G = (V, E, w)</i> with |V| = 25, |E| = 38 and w : E → ℕ (km). The full data is in <code>data/malawi_roads.csv</code> in the repository, one road per line as <code>town_a,town_b,km</code>.</p>
+<h3>Vertices and adjacency list</h3>
+<table><thead><tr><th>ID</th><th>Town</th><th>Region</th><th>Degree</th><th>Neighbours (distance in km)</th></tr></thead><tbody><tr><td class="num">0</td><td>Chitipa</td><td>North</td><td class="num">2</td>
+  <td>Karonga (100), Rumphi (230)</td></tr><tr><td class="num">1</td><td>Karonga</td><td>North</td><td class="num">2</td>
+  <td>Chitipa (100), Rumphi (165)</td></tr><tr><td class="num">2</td><td>Rumphi</td><td>North</td><td class="num">3</td>
+  <td>Chitipa (230), Karonga (165), Mzuzu (67)</td></tr><tr><td class="num">3</td><td>Mzuzu</td><td>North</td><td class="num">3</td>
+  <td>Rumphi (67), Nkhata Bay (47), Mzimba (110)</td></tr><tr><td class="num">4</td><td>Nkhata Bay</td><td>North</td><td class="num">2</td>
+  <td>Mzuzu (47), Nkhotakota (230)</td></tr><tr><td class="num">5</td><td>Mzimba</td><td>North</td><td class="num">2</td>
+  <td>Mzuzu (110), Kasungu (140)</td></tr><tr><td class="num">6</td><td>Kasungu</td><td>Central</td><td class="num">5</td>
+  <td>Mzimba (140), Nkhotakota (120), Ntchisi (90), Lilongwe (127), Mchinji (140)</td></tr><tr><td class="num">7</td><td>Nkhotakota</td><td>Central</td><td class="num">4</td>
+  <td>Nkhata Bay (230), Kasungu (120), Ntchisi (70), Salima (110)</td></tr><tr><td class="num">8</td><td>Ntchisi</td><td>Central</td><td class="num">3</td>
+  <td>Kasungu (90), Nkhotakota (70), Dowa (50)</td></tr><tr><td class="num">9</td><td>Lilongwe</td><td>Central</td><td class="num">5</td>
+  <td>Kasungu (127), Dowa (55), Salima (103), Mchinji (110), Dedza (85)</td></tr><tr><td class="num">10</td><td>Mchinji</td><td>Central</td><td class="num">2</td>
+  <td>Kasungu (140), Lilongwe (110)</td></tr><tr><td class="num">11</td><td>Salima</td><td>Central</td><td class="num">5</td>
+  <td>Nkhotakota (110), Dowa (85), Lilongwe (103), Dedza (125), Mangochi (190)</td></tr><tr><td class="num">12</td><td>Dowa</td><td>Central</td><td class="num">3</td>
+  <td>Ntchisi (50), Lilongwe (55), Salima (85)</td></tr><tr><td class="num">13</td><td>Dedza</td><td>Central</td><td class="num">3</td>
+  <td>Lilongwe (85), Salima (125), Ntcheu (75)</td></tr><tr><td class="num">14</td><td>Ntcheu</td><td>Central</td><td class="num">3</td>
+  <td>Dedza (75), Balaka (60), Blantyre (160)</td></tr><tr><td class="num">15</td><td>Mangochi</td><td>South</td><td class="num">2</td>
+  <td>Salima (190), Liwonde (70)</td></tr><tr><td class="num">16</td><td>Balaka</td><td>South</td><td class="num">3</td>
+  <td>Ntcheu (60), Liwonde (30), Blantyre (110)</td></tr><tr><td class="num">17</td><td>Blantyre</td><td>South</td><td class="num">7</td>
+  <td>Ntcheu (160), Balaka (110), Zomba (65), Mwanza (95), Thyolo (45), Mulanje (70), Chikwawa (50)</td></tr><tr><td class="num">18</td><td>Liwonde</td><td>South</td><td class="num">3</td>
+  <td>Balaka (30), Mangochi (70), Zomba (55)</td></tr><tr><td class="num">19</td><td>Zomba</td><td>South</td><td class="num">3</td>
+  <td>Liwonde (55), Blantyre (65), Mulanje (100)</td></tr><tr><td class="num">20</td><td>Mulanje</td><td>South</td><td class="num">3</td>
+  <td>Zomba (100), Blantyre (70), Thyolo (45)</td></tr><tr><td class="num">21</td><td>Mwanza</td><td>South</td><td class="num">1</td>
+  <td>Blantyre (95)</td></tr><tr><td class="num">22</td><td>Thyolo</td><td>South</td><td class="num">3</td>
+  <td>Blantyre (45), Mulanje (45), Nsanje (150)</td></tr><tr><td class="num">23</td><td>Chikwawa</td><td>South</td><td class="num">2</td>
+  <td>Blantyre (50), Nsanje (125)</td></tr><tr><td class="num">24</td><td>Nsanje</td><td>South</td><td class="num">2</td>
+  <td>Chikwawa (125), Thyolo (150)</td></tr></tbody></table>
+<h3>Edges (weights in km)</h3>
+<div class="two"><table class="compact"><thead><tr><th>Edge</th><th>Town A</th><th>Town B</th><th>km</th></tr></thead><tbody><tr><td class="num">e1</td><td>Chitipa</td><td>Karonga</td><td class="num">100</td></tr><tr><td class="num">e2</td><td>Chitipa</td><td>Rumphi</td><td class="num">230</td></tr><tr><td class="num">e3</td><td>Karonga</td><td>Rumphi</td><td class="num">165</td></tr><tr><td class="num">e4</td><td>Rumphi</td><td>Mzuzu</td><td class="num">67</td></tr><tr><td class="num">e5</td><td>Mzuzu</td><td>Nkhata Bay</td><td class="num">47</td></tr><tr><td class="num">e6</td><td>Mzuzu</td><td>Mzimba</td><td class="num">110</td></tr><tr><td class="num">e7</td><td>Mzimba</td><td>Kasungu</td><td class="num">140</td></tr><tr><td class="num">e8</td><td>Nkhata Bay</td><td>Nkhotakota</td><td class="num">230</td></tr><tr><td class="num">e9</td><td>Kasungu</td><td>Nkhotakota</td><td class="num">120</td></tr><tr><td class="num">e10</td><td>Kasungu</td><td>Ntchisi</td><td class="num">90</td></tr><tr><td class="num">e11</td><td>Kasungu</td><td>Lilongwe</td><td class="num">127</td></tr><tr><td class="num">e12</td><td>Kasungu</td><td>Mchinji</td><td class="num">140</td></tr><tr><td class="num">e13</td><td>Nkhotakota</td><td>Ntchisi</td><td class="num">70</td></tr><tr><td class="num">e14</td><td>Nkhotakota</td><td>Salima</td><td class="num">110</td></tr><tr><td class="num">e15</td><td>Ntchisi</td><td>Dowa</td><td class="num">50</td></tr><tr><td class="num">e16</td><td>Dowa</td><td>Lilongwe</td><td class="num">55</td></tr><tr><td class="num">e17</td><td>Dowa</td><td>Salima</td><td class="num">85</td></tr><tr><td class="num">e18</td><td>Lilongwe</td><td>Salima</td><td class="num">103</td></tr><tr><td class="num">e19</td><td>Lilongwe</td><td>Mchinji</td><td class="num">110</td></tr></tbody></table><table class="compact"><thead><tr><th>Edge</th><th>Town A</th><th>Town B</th><th>km</th></tr></thead><tbody><tr><td class="num">e20</td><td>Lilongwe</td><td>Dedza</td><td class="num">85</td></tr><tr><td class="num">e21</td><td>Dedza</td><td>Salima</td><td class="num">125</td></tr><tr><td class="num">e22</td><td>Dedza</td><td>Ntcheu</td><td class="num">75</td></tr><tr><td class="num">e23</td><td>Salima</td><td>Mangochi</td><td class="num">190</td></tr><tr><td class="num">e24</td><td>Ntcheu</td><td>Balaka</td><td class="num">60</td></tr><tr><td class="num">e25</td><td>Ntcheu</td><td>Blantyre</td><td class="num">160</td></tr><tr><td class="num">e26</td><td>Balaka</td><td>Liwonde</td><td class="num">30</td></tr><tr><td class="num">e27</td><td>Balaka</td><td>Blantyre</td><td class="num">110</td></tr><tr><td class="num">e28</td><td>Liwonde</td><td>Mangochi</td><td class="num">70</td></tr><tr><td class="num">e29</td><td>Liwonde</td><td>Zomba</td><td class="num">55</td></tr><tr><td class="num">e30</td><td>Zomba</td><td>Blantyre</td><td class="num">65</td></tr><tr><td class="num">e31</td><td>Zomba</td><td>Mulanje</td><td class="num">100</td></tr><tr><td class="num">e32</td><td>Blantyre</td><td>Mwanza</td><td class="num">95</td></tr><tr><td class="num">e33</td><td>Blantyre</td><td>Thyolo</td><td class="num">45</td></tr><tr><td class="num">e34</td><td>Blantyre</td><td>Mulanje</td><td class="num">70</td></tr><tr><td class="num">e35</td><td>Thyolo</td><td>Mulanje</td><td class="num">45</td></tr><tr><td class="num">e36</td><td>Blantyre</td><td>Chikwawa</td><td class="num">50</td></tr><tr><td class="num">e37</td><td>Chikwawa</td><td>Nsanje</td><td class="num">125</td></tr><tr><td class="num">e38</td><td>Thyolo</td><td>Nsanje</td><td class="num">150</td></tr></tbody></table></div>
+</section>
+
+<section>
+<h2>2. Drawing and description of the graph <span class="q">Q2 · 10 marks</span></h2>
+<p><b>Conventions used.</b> Each town is drawn as a circle (vertex) labelled with its name. Each road is a straight line (edge) between two circles. Because the graph is undirected, the lines have no arrowheads. The number in the box on each line is the weight, the distance in km. Towns are placed roughly where they are on the map of Malawi (north at the top), with Lake Malawi shown for orientation only; it is not part of the graph.</p>
+<figure class="map-fig"><svg class="map " viewBox="0 0 790 1260" role="img" aria-label="Map of the Malawi road network graph"><path class="lake" d="M525.0,25.0L515.0,160.0L510.0,270.0L510.0,390.0L515.0,510.0L525.0,600.0L590.0,690.0L648.0,745.0L668.0,710.0L675.0,610.0L645.0,460.0L620.0,310.0L600.0,160.0L585.0,25.0Z"/><text class="lake-label" x="575" y="390" transform="rotate(88 575 390)">Lake Malawi</text><line class="road" x1="220.0" y1="60.0" x2="470.0" y2="70.0"/><line class="road" x1="220.0" y1="60.0" x2="370.0" y2="180.0"/><line class="road" x1="470.0" y1="70.0" x2="370.0" y2="180.0"/><line class="road" x1="370.0" y1="180.0" x2="370.0" y2="280.0"/><line class="road" x1="370.0" y1="280.0" x2="480.0" y2="310.0"/><line class="road" x1="370.0" y1="280.0" x2="220.0" y2="350.0"/><line class="road" x1="220.0" y1="350.0" x2="180.0" y2="490.0"/><line class="road" x1="480.0" y1="310.0" x2="480.0" y2="480.0"/><line class="road" x1="180.0" y1="490.0" x2="480.0" y2="480.0"/><line class="road" x1="180.0" y1="490.0" x2="320.0" y2="540.0"/><line class="road" x1="180.0" y1="490.0" x2="220.0" y2="680.0"/><line class="road" x1="180.0" y1="490.0" x2="110.0" y2="730.0"/><line class="road" x1="480.0" y1="480.0" x2="320.0" y2="540.0"/><line class="road" x1="480.0" y1="480.0" x2="500.0" y2="640.0"/><line class="road" x1="320.0" y1="540.0" x2="320.0" y2="620.0"/><line class="road" x1="320.0" y1="620.0" x2="220.0" y2="680.0"/><line class="road" x1="320.0" y1="620.0" x2="500.0" y2="640.0"/><line class="road" x1="220.0" y1="680.0" x2="500.0" y2="640.0"/><line class="road" x1="220.0" y1="680.0" x2="110.0" y2="730.0"/><line class="road" x1="220.0" y1="680.0" x2="370.0" y2="760.0"/><line class="road" x1="370.0" y1="760.0" x2="500.0" y2="640.0"/><line class="road" x1="370.0" y1="760.0" x2="370.0" y2="860.0"/><line class="road" x1="500.0" y1="640.0" x2="670.0" y2="785.0"/><line class="road" x1="370.0" y1="860.0" x2="510.0" y2="890.0"/><line class="road" x1="370.0" y1="860.0" x2="510.0" y2="1020.0"/><line class="road" x1="510.0" y1="890.0" x2="640.0" y2="890.0"/><line class="road" x1="510.0" y1="890.0" x2="510.0" y2="1020.0"/><line class="road" x1="640.0" y1="890.0" x2="670.0" y2="785.0"/><line class="road" x1="640.0" y1="890.0" x2="680.0" y2="980.0"/><line class="road" x1="680.0" y1="980.0" x2="510.0" y2="1020.0"/><line class="road" x1="680.0" y1="980.0" x2="700.0" y2="1100.0"/><line class="road" x1="510.0" y1="1020.0" x2="270.0" y2="1000.0"/><line class="road" x1="510.0" y1="1020.0" x2="530.0" y2="1130.0"/><line class="road" x1="510.0" y1="1020.0" x2="700.0" y2="1100.0"/><line class="road" x1="530.0" y1="1130.0" x2="700.0" y2="1100.0"/><line class="road" x1="510.0" y1="1020.0" x2="350.0" y2="1110.0"/><line class="road" x1="350.0" y1="1110.0" x2="450.0" y2="1230.0"/><line class="road" x1="530.0" y1="1130.0" x2="450.0" y2="1230.0"/><g class="wt"><rect x="328.0" y="56.0" width="34" height="18" rx="4"/><text x="345.0" y="69.5">100</text></g><g class="wt"><rect x="278.0" y="111.0" width="34" height="18" rx="4"/><text x="295.0" y="124.5">230</text></g><g class="wt"><rect x="403.0" y="116.0" width="34" height="18" rx="4"/><text x="420.0" y="129.5">165</text></g><g class="wt"><rect x="353.0" y="221.0" width="34" height="18" rx="4"/><text x="370.0" y="234.5">67</text></g><g class="wt"><rect x="408.0" y="286.0" width="34" height="18" rx="4"/><text x="425.0" y="299.5">47</text></g><g class="wt"><rect x="278.0" y="306.0" width="34" height="18" rx="4"/><text x="295.0" y="319.5">110</text></g><g class="wt"><rect x="183.0" y="411.0" width="34" height="18" rx="4"/><text x="200.0" y="424.5">140</text></g><g class="wt"><rect x="463.0" y="386.0" width="34" height="18" rx="4"/><text x="480.0" y="399.5">230</text></g><g class="wt"><rect x="313.0" y="476.0" width="34" height="18" rx="4"/><text x="330.0" y="489.5">120</text></g><g class="wt"><rect x="233.0" y="506.0" width="34" height="18" rx="4"/><text x="250.0" y="519.5">90</text></g><g class="wt"><rect x="183.0" y="576.0" width="34" height="18" rx="4"/><text x="200.0" y="589.5">127</text></g><g class="wt"><rect x="128.0" y="601.0" width="34" height="18" rx="4"/><text x="145.0" y="614.5">140</text></g><g class="wt"><rect x="383.0" y="501.0" width="34" height="18" rx="4"/><text x="400.0" y="514.5">70</text></g><g class="wt"><rect x="473.0" y="551.0" width="34" height="18" rx="4"/><text x="490.0" y="564.5">110</text></g><g class="wt"><rect x="303.0" y="571.0" width="34" height="18" rx="4"/><text x="320.0" y="584.5">50</text></g><g class="wt"><rect x="253.0" y="641.0" width="34" height="18" rx="4"/><text x="270.0" y="654.5">55</text></g><g class="wt"><rect x="393.0" y="621.0" width="34" height="18" rx="4"/><text x="410.0" y="634.5">85</text></g><g class="wt"><rect x="343.0" y="651.0" width="34" height="18" rx="4"/><text x="360.0" y="664.5">103</text></g><g class="wt"><rect x="148.0" y="696.0" width="34" height="18" rx="4"/><text x="165.0" y="709.5">110</text></g><g class="wt"><rect x="278.0" y="711.0" width="34" height="18" rx="4"/><text x="295.0" y="724.5">85</text></g><g class="wt"><rect x="418.0" y="691.0" width="34" height="18" rx="4"/><text x="435.0" y="704.5">125</text></g><g class="wt"><rect x="353.0" y="801.0" width="34" height="18" rx="4"/><text x="370.0" y="814.5">75</text></g><g class="wt"><rect x="568.0" y="703.5" width="34" height="18" rx="4"/><text x="585.0" y="717.0">190</text></g><g class="wt"><rect x="423.0" y="866.0" width="34" height="18" rx="4"/><text x="440.0" y="879.5">60</text></g><g class="wt"><rect x="423.0" y="931.0" width="34" height="18" rx="4"/><text x="440.0" y="944.5">160</text></g><g class="wt"><rect x="558.0" y="881.0" width="34" height="18" rx="4"/><text x="575.0" y="894.5">30</text></g><g class="wt"><rect x="493.0" y="946.0" width="34" height="18" rx="4"/><text x="510.0" y="959.5">110</text></g><g class="wt"><rect x="638.0" y="828.5" width="34" height="18" rx="4"/><text x="655.0" y="842.0">70</text></g><g class="wt"><rect x="643.0" y="926.0" width="34" height="18" rx="4"/><text x="660.0" y="939.5">55</text></g><g class="wt"><rect x="578.0" y="991.0" width="34" height="18" rx="4"/><text x="595.0" y="1004.5">65</text></g><g class="wt"><rect x="673.0" y="1031.0" width="34" height="18" rx="4"/><text x="690.0" y="1044.5">100</text></g><g class="wt"><rect x="373.0" y="1001.0" width="34" height="18" rx="4"/><text x="390.0" y="1014.5">95</text></g><g class="wt"><rect x="503.0" y="1066.0" width="34" height="18" rx="4"/><text x="520.0" y="1079.5">45</text></g><g class="wt"><rect x="588.0" y="1051.0" width="34" height="18" rx="4"/><text x="605.0" y="1064.5">70</text></g><g class="wt"><rect x="598.0" y="1106.0" width="34" height="18" rx="4"/><text x="615.0" y="1119.5">45</text></g><g class="wt"><rect x="413.0" y="1056.0" width="34" height="18" rx="4"/><text x="430.0" y="1069.5">50</text></g><g class="wt"><rect x="383.0" y="1161.0" width="34" height="18" rx="4"/><text x="400.0" y="1174.5">125</text></g><g class="wt"><rect x="473.0" y="1171.0" width="34" height="18" rx="4"/><text x="490.0" y="1184.5">150</text></g><circle class="town" cx="220.0" cy="60.0" r="7"/><text class="town-label" x="208.0" y="64.5" text-anchor="end">Chitipa</text><circle class="town" cx="470.0" cy="70.0" r="7"/><text class="town-label" x="458.0" y="74.5" text-anchor="end">Karonga</text><circle class="town" cx="370.0" cy="180.0" r="7"/><text class="town-label" x="382.0" y="184.5" text-anchor="start">Rumphi</text><circle class="town" cx="370.0" cy="280.0" r="7"/><text class="town-label" x="358.0" y="284.5" text-anchor="end">Mzuzu</text><circle class="town" cx="480.0" cy="310.0" r="7"/><text class="town-label" x="468.0" y="314.5" text-anchor="end">Nkhata Bay</text><circle class="town" cx="220.0" cy="350.0" r="7"/><text class="town-label" x="208.0" y="354.5" text-anchor="end">Mzimba</text><circle class="town" cx="180.0" cy="490.0" r="7"/><text class="town-label" x="168.0" y="494.5" text-anchor="end">Kasungu</text><circle class="town" cx="480.0" cy="480.0" r="7"/><text class="town-label" x="492.0" y="484.5" text-anchor="start">Nkhotakota</text><circle class="town" cx="320.0" cy="540.0" r="7"/><text class="town-label" x="320.0" y="526.0" text-anchor="middle">Ntchisi</text><circle class="town" cx="220.0" cy="680.0" r="7"/><text class="town-label" x="208.0" y="684.5" text-anchor="end">Lilongwe</text><circle class="town" cx="110.0" cy="730.0" r="7"/><text class="town-label" x="110.0" y="756.0" text-anchor="middle">Mchinji</text><circle class="town" cx="500.0" cy="640.0" r="7"/><text class="town-label" x="512.0" y="644.5" text-anchor="start">Salima</text><circle class="town" cx="320.0" cy="620.0" r="7"/><text class="town-label" x="308.0" y="624.5" text-anchor="end">Dowa</text><circle class="town" cx="370.0" cy="760.0" r="7"/><text class="town-label" x="358.0" y="764.5" text-anchor="end">Dedza</text><circle class="town" cx="370.0" cy="860.0" r="7"/><text class="town-label" x="358.0" y="864.5" text-anchor="end">Ntcheu</text><circle class="town" cx="670.0" cy="785.0" r="7"/><text class="town-label" x="682.0" y="789.5" text-anchor="start">Mangochi</text><circle class="town" cx="510.0" cy="890.0" r="7"/><text class="town-label" x="510.0" y="916.0" text-anchor="middle">Balaka</text><circle class="town" cx="510.0" cy="1020.0" r="7"/><text class="town-label" x="498.0" y="1024.5" text-anchor="end">Blantyre</text><circle class="town" cx="640.0" cy="890.0" r="7"/><text class="town-label" x="652.0" y="894.5" text-anchor="start">Liwonde</text><circle class="town" cx="680.0" cy="980.0" r="7"/><text class="town-label" x="692.0" y="984.5" text-anchor="start">Zomba</text><circle class="town" cx="700.0" cy="1100.0" r="7"/><text class="town-label" x="712.0" y="1104.5" text-anchor="start">Mulanje</text><circle class="town" cx="270.0" cy="1000.0" r="7"/><text class="town-label" x="258.0" y="1004.5" text-anchor="end">Mwanza</text><circle class="town" cx="530.0" cy="1130.0" r="7"/><text class="town-label" x="530.0" y="1156.0" text-anchor="middle">Thyolo</text><circle class="town" cx="350.0" cy="1110.0" r="7"/><text class="town-label" x="338.0" y="1114.5" text-anchor="end">Chikwawa</text><circle class="town" cx="450.0" cy="1230.0" r="7"/><text class="town-label" x="462.0" y="1234.5" text-anchor="start">Nsanje</text></svg><figcaption>Figure 1. The Malawi road network graph, G = (V, E), |V| = 25, |E| = 38.</figcaption></figure>
+<h3>Description</h3>
+<ul>
+<li><b>Connected:</b> there is a path between every pair of towns, so G has a single component. Test T10 confirms this: all 625 source–target pairs have a finite distance.</li>
+<li><b>Sparse:</b> a simple graph on 25 vertices can have at most 25 × 24 / 2 = 300 edges. G has 38, a density of 38 / 300 ≈ 0.13. This is typical of road networks and is why an adjacency list is the right representation.</li>
+<li><b>Degrees:</b> the sum of degrees is 2|E| = 76 (handshake lemma), so the average degree is 3.04. Blantyre has the highest degree (7), as the commercial hub of the south. Kasungu, Lilongwe and Salima have degree 5. Mwanza has degree 1 (a pendant vertex on the Mozambique border road), so every route to Mwanza must pass through Blantyre.</li>
+<li><b>Cycles:</b> G contains many cycles, for example Blantyre–Thyolo–Mulanje–Blantyre (45 + 45 + 70 = 160 km) and Lilongwe–Dowa–Salima–Lilongwe. The cyclomatic number |E| − |V| + 1 = 14 is the number of independent cycles, and also the number of roads that can be removed while keeping all towns connected (see the MST in section 6).</li>
+<li><b>Bridges:</b> Blantyre–Mwanza is a bridge (removing it disconnects Mwanza). The northern towns join the rest of the country through two corridors: the M1 through Mzimba and Kasungu, and the M5 lakeshore road through Nkhata Bay and Nkhotakota.</li>
+<li><b>Longest and shortest roads:</b> Chitipa–Rumphi and Nkhata Bay–Nkhotakota (230 km) are the longest. Balaka–Liwonde (30 km) is the shortest.</li>
+</ul>
+<p class="note">The assignment asks for the graph to be drawn on paper. Figure 1 is the typed version; the hand-drawn version follows the same layout and conventions.</p>
+</section>
+
+<section>
+<h2>3. How Dijkstra's algorithm works on the graph <span class="q">Q3 · 15 marks</span></h2>
+<p>Dijkstra's algorithm finds the shortest distance from one <b>source</b> vertex to every other vertex in a graph with non-negative weights. It keeps a tentative distance <i>d[v]</i> for every town, starting at 0 for the source and ∞ for the rest. At each step it <b>settles</b> the unsettled town with the smallest tentative distance; that distance is now final, because every other route would have to leave through a town that is already at least as far away and the weights are never negative. It then <b>relaxes</b> each road (u, v) out of the settled town: if d[u] + w(u, v) &lt; d[v], it lowers d[v] and records u as the previous town on v's route.</p>
+<pre class="code">DIJKSTRA(G, s)
+  for each vertex v:  d[v] ← ∞,  prev[v] ← NIL
+  d[s] ← 0;  Q ← min-priority queue containing (0, s)
+  while Q is not empty:
+      (du, u) ← EXTRACT-MIN(Q)
+      if u is already settled: continue          // stale entry
+      mark u settled
+      for each edge (u, v, w):
+          if v not settled and du + w &lt; d[v]:
+              d[v] ← du + w;  prev[v] ← u;  INSERT(Q, (d[v], v))</pre>
+<h3>Worked example: all shortest routes from Lilongwe</h3>
+<p>We run the algorithm with Lilongwe as the source. The table shows, for each of the 25 steps, which town is settled, the roads that improved a tentative distance, and the queue of reached-but-unsettled towns afterwards (in order of distance). A town leaves the queue in exactly the order of its final distance.</p>
+<table class="steps"><thead><tr><th>Step</th><th>Settle</th><th>d</th><th>Relaxations (old → new)</th><th>Tentative distances after the step</th></tr></thead><tbody><tr><td class="num">1</td><td><b>Lilongwe</b></td><td class="num">0</td><td>Kasungu: ∞ → <b>127</b><br>Dowa: ∞ → <b>55</b><br>Salima: ∞ → <b>103</b><br>Mchinji: ∞ → <b>110</b><br>Dedza: ∞ → <b>85</b></td><td class="small">Dowa 55, Dedza 85, Salima 103, Mchinji 110, Kasungu 127</td></tr><tr><td class="num">2</td><td><b>Dowa</b></td><td class="num">55</td><td>Ntchisi: ∞ → <b>105</b></td><td class="small">Dedza 85, Salima 103, Ntchisi 105, Mchinji 110, Kasungu 127</td></tr><tr><td class="num">3</td><td><b>Dedza</b></td><td class="num">85</td><td>Ntcheu: ∞ → <b>160</b></td><td class="small">Salima 103, Ntchisi 105, Mchinji 110, Kasungu 127, Ntcheu 160</td></tr><tr><td class="num">4</td><td><b>Salima</b></td><td class="num">103</td><td>Nkhotakota: ∞ → <b>213</b><br>Mangochi: ∞ → <b>293</b></td><td class="small">Ntchisi 105, Mchinji 110, Kasungu 127, Ntcheu 160, Nkhotakota 213, Mangochi 293</td></tr><tr><td class="num">5</td><td><b>Ntchisi</b></td><td class="num">105</td><td>Nkhotakota: 213 → <b>175</b></td><td class="small">Mchinji 110, Kasungu 127, Ntcheu 160, Nkhotakota 175, Mangochi 293</td></tr><tr><td class="num">6</td><td><b>Mchinji</b></td><td class="num">110</td><td>none (all neighbours settled or no shorter)</td><td class="small">Kasungu 127, Ntcheu 160, Nkhotakota 175, Mangochi 293</td></tr><tr><td class="num">7</td><td><b>Kasungu</b></td><td class="num">127</td><td>Mzimba: ∞ → <b>267</b></td><td class="small">Ntcheu 160, Nkhotakota 175, Mzimba 267, Mangochi 293</td></tr><tr><td class="num">8</td><td><b>Ntcheu</b></td><td class="num">160</td><td>Balaka: ∞ → <b>220</b><br>Blantyre: ∞ → <b>320</b></td><td class="small">Nkhotakota 175, Balaka 220, Mzimba 267, Mangochi 293, Blantyre 320</td></tr><tr><td class="num">9</td><td><b>Nkhotakota</b></td><td class="num">175</td><td>Nkhata Bay: ∞ → <b>405</b></td><td class="small">Balaka 220, Mzimba 267, Mangochi 293, Blantyre 320, Nkhata Bay 405</td></tr><tr><td class="num">10</td><td><b>Balaka</b></td><td class="num">220</td><td>Liwonde: ∞ → <b>250</b></td><td class="small">Liwonde 250, Mzimba 267, Mangochi 293, Blantyre 320, Nkhata Bay 405</td></tr><tr><td class="num">11</td><td><b>Liwonde</b></td><td class="num">250</td><td>Zomba: ∞ → <b>305</b></td><td class="small">Mzimba 267, Mangochi 293, Zomba 305, Blantyre 320, Nkhata Bay 405</td></tr><tr><td class="num">12</td><td><b>Mzimba</b></td><td class="num">267</td><td>Mzuzu: ∞ → <b>377</b></td><td class="small">Mangochi 293, Zomba 305, Blantyre 320, Mzuzu 377, Nkhata Bay 405</td></tr><tr><td class="num">13</td><td><b>Mangochi</b></td><td class="num">293</td><td>none (all neighbours settled or no shorter)</td><td class="small">Zomba 305, Blantyre 320, Mzuzu 377, Nkhata Bay 405</td></tr><tr><td class="num">14</td><td><b>Zomba</b></td><td class="num">305</td><td>Mulanje: ∞ → <b>405</b></td><td class="small">Blantyre 320, Mzuzu 377, Nkhata Bay 405, Mulanje 405</td></tr><tr><td class="num">15</td><td><b>Blantyre</b></td><td class="num">320</td><td>Mwanza: ∞ → <b>415</b><br>Thyolo: ∞ → <b>365</b><br>Mulanje: 405 → <b>390</b><br>Chikwawa: ∞ → <b>370</b></td><td class="small">Thyolo 365, Chikwawa 370, Mzuzu 377, Mulanje 390, Nkhata Bay 405, Mwanza 415</td></tr><tr><td class="num">16</td><td><b>Thyolo</b></td><td class="num">365</td><td>Nsanje: ∞ → <b>515</b></td><td class="small">Chikwawa 370, Mzuzu 377, Mulanje 390, Nkhata Bay 405, Mwanza 415, Nsanje 515</td></tr><tr><td class="num">17</td><td><b>Chikwawa</b></td><td class="num">370</td><td>Nsanje: 515 → <b>495</b></td><td class="small">Mzuzu 377, Mulanje 390, Nkhata Bay 405, Mwanza 415, Nsanje 495</td></tr><tr><td class="num">18</td><td><b>Mzuzu</b></td><td class="num">377</td><td>Rumphi: ∞ → <b>444</b></td><td class="small">Mulanje 390, Nkhata Bay 405, Mwanza 415, Rumphi 444, Nsanje 495</td></tr><tr><td class="num">19</td><td><b>Mulanje</b></td><td class="num">390</td><td>none (all neighbours settled or no shorter)</td><td class="small">Nkhata Bay 405, Mwanza 415, Rumphi 444, Nsanje 495</td></tr><tr><td class="num">20</td><td><b>Nkhata Bay</b></td><td class="num">405</td><td>none (all neighbours settled or no shorter)</td><td class="small">Mwanza 415, Rumphi 444, Nsanje 495</td></tr><tr><td class="num">21</td><td><b>Mwanza</b></td><td class="num">415</td><td>none (all neighbours settled or no shorter)</td><td class="small">Rumphi 444, Nsanje 495</td></tr><tr><td class="num">22</td><td><b>Rumphi</b></td><td class="num">444</td><td>Chitipa: ∞ → <b>674</b><br>Karonga: ∞ → <b>609</b></td><td class="small">Nsanje 495, Karonga 609, Chitipa 674</td></tr><tr><td class="num">23</td><td><b>Nsanje</b></td><td class="num">495</td><td>none (all neighbours settled or no shorter)</td><td class="small">Karonga 609, Chitipa 674</td></tr><tr><td class="num">24</td><td><b>Karonga</b></td><td class="num">609</td><td>none (all neighbours settled or no shorter)</td><td class="small">Chitipa 674</td></tr><tr><td class="num">25</td><td><b>Chitipa</b></td><td class="num">674</td><td>none (all neighbours settled or no shorter)</td><td class="small">(empty)</td></tr></tbody></table>
+<p>Some steps show the algorithm correcting itself. In step 4, Salima sets Nkhotakota to 103 + 110 = 213 km. In step 5, Ntchisi (105 km) finds a shorter road, 105 + 70 = 175 km, so Nkhotakota is updated to 175 and its previous town changes to Ntchisi. In step 14, Zomba sets Mulanje to 405 km, and in step 15 Blantyre improves it to 320 + 70 = 390 km.</p>
+<h3>Result: shortest distances and routes from Lilongwe</h3>
+<table><thead><tr><th>Town</th><th>Distance (km)</th><th>Previous town</th><th>Shortest route</th></tr></thead><tbody><tr><td>Lilongwe</td><td class="num">0</td><td>–</td>
+   <td>Lilongwe</td></tr><tr><td>Dowa</td><td class="num">55</td><td>Lilongwe</td>
+   <td>Lilongwe → Dowa</td></tr><tr><td>Dedza</td><td class="num">85</td><td>Lilongwe</td>
+   <td>Lilongwe → Dedza</td></tr><tr><td>Salima</td><td class="num">103</td><td>Lilongwe</td>
+   <td>Lilongwe → Salima</td></tr><tr><td>Ntchisi</td><td class="num">105</td><td>Dowa</td>
+   <td>Lilongwe → Dowa → Ntchisi</td></tr><tr><td>Mchinji</td><td class="num">110</td><td>Lilongwe</td>
+   <td>Lilongwe → Mchinji</td></tr><tr><td>Kasungu</td><td class="num">127</td><td>Lilongwe</td>
+   <td>Lilongwe → Kasungu</td></tr><tr><td>Ntcheu</td><td class="num">160</td><td>Dedza</td>
+   <td>Lilongwe → Dedza → Ntcheu</td></tr><tr><td>Nkhotakota</td><td class="num">175</td><td>Ntchisi</td>
+   <td>Lilongwe → Dowa → Ntchisi → Nkhotakota</td></tr><tr><td>Balaka</td><td class="num">220</td><td>Ntcheu</td>
+   <td>Lilongwe → Dedza → Ntcheu → Balaka</td></tr><tr><td>Liwonde</td><td class="num">250</td><td>Balaka</td>
+   <td>Lilongwe → Dedza → Ntcheu → Balaka → Liwonde</td></tr><tr><td>Mzimba</td><td class="num">267</td><td>Kasungu</td>
+   <td>Lilongwe → Kasungu → Mzimba</td></tr><tr><td>Mangochi</td><td class="num">293</td><td>Salima</td>
+   <td>Lilongwe → Salima → Mangochi</td></tr><tr><td>Zomba</td><td class="num">305</td><td>Liwonde</td>
+   <td>Lilongwe → Dedza → Ntcheu → Balaka → Liwonde → Zomba</td></tr><tr><td>Blantyre</td><td class="num">320</td><td>Ntcheu</td>
+   <td>Lilongwe → Dedza → Ntcheu → Blantyre</td></tr><tr><td>Thyolo</td><td class="num">365</td><td>Blantyre</td>
+   <td>Lilongwe → Dedza → Ntcheu → Blantyre → Thyolo</td></tr><tr><td>Chikwawa</td><td class="num">370</td><td>Blantyre</td>
+   <td>Lilongwe → Dedza → Ntcheu → Blantyre → Chikwawa</td></tr><tr><td>Mzuzu</td><td class="num">377</td><td>Mzimba</td>
+   <td>Lilongwe → Kasungu → Mzimba → Mzuzu</td></tr><tr><td>Mulanje</td><td class="num">390</td><td>Blantyre</td>
+   <td>Lilongwe → Dedza → Ntcheu → Blantyre → Mulanje</td></tr><tr><td>Nkhata Bay</td><td class="num">405</td><td>Nkhotakota</td>
+   <td>Lilongwe → Dowa → Ntchisi → Nkhotakota → Nkhata Bay</td></tr><tr><td>Mwanza</td><td class="num">415</td><td>Blantyre</td>
+   <td>Lilongwe → Dedza → Ntcheu → Blantyre → Mwanza</td></tr><tr><td>Rumphi</td><td class="num">444</td><td>Mzuzu</td>
+   <td>Lilongwe → Kasungu → Mzimba → Mzuzu → Rumphi</td></tr><tr><td>Nsanje</td><td class="num">495</td><td>Chikwawa</td>
+   <td>Lilongwe → Dedza → Ntcheu → Blantyre → Chikwawa → Nsanje</td></tr><tr><td>Karonga</td><td class="num">609</td><td>Rumphi</td>
+   <td>Lilongwe → Kasungu → Mzimba → Mzuzu → Rumphi → Karonga</td></tr><tr><td>Chitipa</td><td class="num">674</td><td>Rumphi</td>
+   <td>Lilongwe → Kasungu → Mzimba → Mzuzu → Rumphi → Chitipa</td></tr></tbody></table>
+<p>The previous-town pointers form the <b>shortest-path tree</b> rooted at Lilongwe (Figure 2). Reading the route to any town means following the pointers back from that town to Lilongwe. For example, Blantyre ← Ntcheu ← Dedza ← Lilongwe gives Lilongwe → Dedza → Ntcheu → Blantyre, 85 + 75 + 160 = 320 km. Note that this is shorter than going via Balaka (85 + 75 + 60 + 110 = 330 km) or via Salima, Mangochi and Liwonde.</p>
+<figure class="map-fig small-map"><svg class="map " viewBox="0 0 790 1260" role="img" aria-label="Map of the Malawi road network graph"><path class="lake" d="M525.0,25.0L515.0,160.0L510.0,270.0L510.0,390.0L515.0,510.0L525.0,600.0L590.0,690.0L648.0,745.0L668.0,710.0L675.0,610.0L645.0,460.0L620.0,310.0L600.0,160.0L585.0,25.0Z"/><text class="lake-label" x="575" y="390" transform="rotate(88 575 390)">Lake Malawi</text><line class="road off-mst" x1="220.0" y1="60.0" x2="470.0" y2="70.0"/><line class="road on-mst" x1="220.0" y1="60.0" x2="370.0" y2="180.0"/><line class="road on-mst" x1="470.0" y1="70.0" x2="370.0" y2="180.0"/><line class="road on-mst" x1="370.0" y1="180.0" x2="370.0" y2="280.0"/><line class="road off-mst" x1="370.0" y1="280.0" x2="480.0" y2="310.0"/><line class="road on-mst" x1="370.0" y1="280.0" x2="220.0" y2="350.0"/><line class="road on-mst" x1="220.0" y1="350.0" x2="180.0" y2="490.0"/><line class="road on-mst" x1="480.0" y1="310.0" x2="480.0" y2="480.0"/><line class="road off-mst" x1="180.0" y1="490.0" x2="480.0" y2="480.0"/><line class="road off-mst" x1="180.0" y1="490.0" x2="320.0" y2="540.0"/><line class="road on-mst" x1="180.0" y1="490.0" x2="220.0" y2="680.0"/><line class="road off-mst" x1="180.0" y1="490.0" x2="110.0" y2="730.0"/><line class="road on-mst" x1="480.0" y1="480.0" x2="320.0" y2="540.0"/><line class="road off-mst" x1="480.0" y1="480.0" x2="500.0" y2="640.0"/><line class="road on-mst" x1="320.0" y1="540.0" x2="320.0" y2="620.0"/><line class="road on-mst" x1="320.0" y1="620.0" x2="220.0" y2="680.0"/><line class="road off-mst" x1="320.0" y1="620.0" x2="500.0" y2="640.0"/><line class="road on-mst" x1="220.0" y1="680.0" x2="500.0" y2="640.0"/><line class="road on-mst" x1="220.0" y1="680.0" x2="110.0" y2="730.0"/><line class="road on-mst" x1="220.0" y1="680.0" x2="370.0" y2="760.0"/><line class="road off-mst" x1="370.0" y1="760.0" x2="500.0" y2="640.0"/><line class="road on-mst" x1="370.0" y1="760.0" x2="370.0" y2="860.0"/><line class="road on-mst" x1="500.0" y1="640.0" x2="670.0" y2="785.0"/><line class="road on-mst" x1="370.0" y1="860.0" x2="510.0" y2="890.0"/><line class="road on-mst" x1="370.0" y1="860.0" x2="510.0" y2="1020.0"/><line class="road on-mst" x1="510.0" y1="890.0" x2="640.0" y2="890.0"/><line class="road off-mst" x1="510.0" y1="890.0" x2="510.0" y2="1020.0"/><line class="road off-mst" x1="640.0" y1="890.0" x2="670.0" y2="785.0"/><line class="road on-mst" x1="640.0" y1="890.0" x2="680.0" y2="980.0"/><line class="road off-mst" x1="680.0" y1="980.0" x2="510.0" y2="1020.0"/><line class="road off-mst" x1="680.0" y1="980.0" x2="700.0" y2="1100.0"/><line class="road on-mst" x1="510.0" y1="1020.0" x2="270.0" y2="1000.0"/><line class="road on-mst" x1="510.0" y1="1020.0" x2="530.0" y2="1130.0"/><line class="road on-mst" x1="510.0" y1="1020.0" x2="700.0" y2="1100.0"/><line class="road off-mst" x1="530.0" y1="1130.0" x2="700.0" y2="1100.0"/><line class="road on-mst" x1="510.0" y1="1020.0" x2="350.0" y2="1110.0"/><line class="road on-mst" x1="350.0" y1="1110.0" x2="450.0" y2="1230.0"/><line class="road off-mst" x1="530.0" y1="1130.0" x2="450.0" y2="1230.0"/><g class="wt"><rect x="328.0" y="56.0" width="34" height="18" rx="4"/><text x="345.0" y="69.5">100</text></g><g class="wt hot"><rect x="278.0" y="111.0" width="34" height="18" rx="4"/><text x="295.0" y="124.5">230</text></g><g class="wt hot"><rect x="403.0" y="116.0" width="34" height="18" rx="4"/><text x="420.0" y="129.5">165</text></g><g class="wt hot"><rect x="353.0" y="221.0" width="34" height="18" rx="4"/><text x="370.0" y="234.5">67</text></g><g class="wt"><rect x="408.0" y="286.0" width="34" height="18" rx="4"/><text x="425.0" y="299.5">47</text></g><g class="wt hot"><rect x="278.0" y="306.0" width="34" height="18" rx="4"/><text x="295.0" y="319.5">110</text></g><g class="wt hot"><rect x="183.0" y="411.0" width="34" height="18" rx="4"/><text x="200.0" y="424.5">140</text></g><g class="wt hot"><rect x="463.0" y="386.0" width="34" height="18" rx="4"/><text x="480.0" y="399.5">230</text></g><g class="wt"><rect x="313.0" y="476.0" width="34" height="18" rx="4"/><text x="330.0" y="489.5">120</text></g><g class="wt"><rect x="233.0" y="506.0" width="34" height="18" rx="4"/><text x="250.0" y="519.5">90</text></g><g class="wt hot"><rect x="183.0" y="576.0" width="34" height="18" rx="4"/><text x="200.0" y="589.5">127</text></g><g class="wt"><rect x="128.0" y="601.0" width="34" height="18" rx="4"/><text x="145.0" y="614.5">140</text></g><g class="wt hot"><rect x="383.0" y="501.0" width="34" height="18" rx="4"/><text x="400.0" y="514.5">70</text></g><g class="wt"><rect x="473.0" y="551.0" width="34" height="18" rx="4"/><text x="490.0" y="564.5">110</text></g><g class="wt hot"><rect x="303.0" y="571.0" width="34" height="18" rx="4"/><text x="320.0" y="584.5">50</text></g><g class="wt hot"><rect x="253.0" y="641.0" width="34" height="18" rx="4"/><text x="270.0" y="654.5">55</text></g><g class="wt"><rect x="393.0" y="621.0" width="34" height="18" rx="4"/><text x="410.0" y="634.5">85</text></g><g class="wt hot"><rect x="343.0" y="651.0" width="34" height="18" rx="4"/><text x="360.0" y="664.5">103</text></g><g class="wt hot"><rect x="148.0" y="696.0" width="34" height="18" rx="4"/><text x="165.0" y="709.5">110</text></g><g class="wt hot"><rect x="278.0" y="711.0" width="34" height="18" rx="4"/><text x="295.0" y="724.5">85</text></g><g class="wt"><rect x="418.0" y="691.0" width="34" height="18" rx="4"/><text x="435.0" y="704.5">125</text></g><g class="wt hot"><rect x="353.0" y="801.0" width="34" height="18" rx="4"/><text x="370.0" y="814.5">75</text></g><g class="wt hot"><rect x="568.0" y="703.5" width="34" height="18" rx="4"/><text x="585.0" y="717.0">190</text></g><g class="wt hot"><rect x="423.0" y="866.0" width="34" height="18" rx="4"/><text x="440.0" y="879.5">60</text></g><g class="wt hot"><rect x="423.0" y="931.0" width="34" height="18" rx="4"/><text x="440.0" y="944.5">160</text></g><g class="wt hot"><rect x="558.0" y="881.0" width="34" height="18" rx="4"/><text x="575.0" y="894.5">30</text></g><g class="wt"><rect x="493.0" y="946.0" width="34" height="18" rx="4"/><text x="510.0" y="959.5">110</text></g><g class="wt"><rect x="638.0" y="828.5" width="34" height="18" rx="4"/><text x="655.0" y="842.0">70</text></g><g class="wt hot"><rect x="643.0" y="926.0" width="34" height="18" rx="4"/><text x="660.0" y="939.5">55</text></g><g class="wt"><rect x="578.0" y="991.0" width="34" height="18" rx="4"/><text x="595.0" y="1004.5">65</text></g><g class="wt"><rect x="673.0" y="1031.0" width="34" height="18" rx="4"/><text x="690.0" y="1044.5">100</text></g><g class="wt hot"><rect x="373.0" y="1001.0" width="34" height="18" rx="4"/><text x="390.0" y="1014.5">95</text></g><g class="wt hot"><rect x="503.0" y="1066.0" width="34" height="18" rx="4"/><text x="520.0" y="1079.5">45</text></g><g class="wt hot"><rect x="588.0" y="1051.0" width="34" height="18" rx="4"/><text x="605.0" y="1064.5">70</text></g><g class="wt"><rect x="598.0" y="1106.0" width="34" height="18" rx="4"/><text x="615.0" y="1119.5">45</text></g><g class="wt hot"><rect x="413.0" y="1056.0" width="34" height="18" rx="4"/><text x="430.0" y="1069.5">50</text></g><g class="wt hot"><rect x="383.0" y="1161.0" width="34" height="18" rx="4"/><text x="400.0" y="1174.5">125</text></g><g class="wt"><rect x="473.0" y="1171.0" width="34" height="18" rx="4"/><text x="490.0" y="1184.5">150</text></g><circle class="town" cx="220.0" cy="60.0" r="7"/><text class="town-label" x="208.0" y="64.5" text-anchor="end">Chitipa</text><circle class="town" cx="470.0" cy="70.0" r="7"/><text class="town-label" x="458.0" y="74.5" text-anchor="end">Karonga</text><circle class="town" cx="370.0" cy="180.0" r="7"/><text class="town-label" x="382.0" y="184.5" text-anchor="start">Rumphi</text><circle class="town" cx="370.0" cy="280.0" r="7"/><text class="town-label" x="358.0" y="284.5" text-anchor="end">Mzuzu</text><circle class="town" cx="480.0" cy="310.0" r="7"/><text class="town-label" x="468.0" y="314.5" text-anchor="end">Nkhata Bay</text><circle class="town" cx="220.0" cy="350.0" r="7"/><text class="town-label" x="208.0" y="354.5" text-anchor="end">Mzimba</text><circle class="town" cx="180.0" cy="490.0" r="7"/><text class="town-label" x="168.0" y="494.5" text-anchor="end">Kasungu</text><circle class="town" cx="480.0" cy="480.0" r="7"/><text class="town-label" x="492.0" y="484.5" text-anchor="start">Nkhotakota</text><circle class="town" cx="320.0" cy="540.0" r="7"/><text class="town-label" x="320.0" y="526.0" text-anchor="middle">Ntchisi</text><circle class="town" cx="220.0" cy="680.0" r="7"/><text class="town-label" x="208.0" y="684.5" text-anchor="end">Lilongwe</text><circle class="town" cx="110.0" cy="730.0" r="7"/><text class="town-label" x="110.0" y="756.0" text-anchor="middle">Mchinji</text><circle class="town" cx="500.0" cy="640.0" r="7"/><text class="town-label" x="512.0" y="644.5" text-anchor="start">Salima</text><circle class="town" cx="320.0" cy="620.0" r="7"/><text class="town-label" x="308.0" y="624.5" text-anchor="end">Dowa</text><circle class="town" cx="370.0" cy="760.0" r="7"/><text class="town-label" x="358.0" y="764.5" text-anchor="end">Dedza</text><circle class="town" cx="370.0" cy="860.0" r="7"/><text class="town-label" x="358.0" y="864.5" text-anchor="end">Ntcheu</text><circle class="town" cx="670.0" cy="785.0" r="7"/><text class="town-label" x="682.0" y="789.5" text-anchor="start">Mangochi</text><circle class="town" cx="510.0" cy="890.0" r="7"/><text class="town-label" x="510.0" y="916.0" text-anchor="middle">Balaka</text><circle class="town" cx="510.0" cy="1020.0" r="7"/><text class="town-label" x="498.0" y="1024.5" text-anchor="end">Blantyre</text><circle class="town" cx="640.0" cy="890.0" r="7"/><text class="town-label" x="652.0" y="894.5" text-anchor="start">Liwonde</text><circle class="town" cx="680.0" cy="980.0" r="7"/><text class="town-label" x="692.0" y="984.5" text-anchor="start">Zomba</text><circle class="town" cx="700.0" cy="1100.0" r="7"/><text class="town-label" x="712.0" y="1104.5" text-anchor="start">Mulanje</text><circle class="town" cx="270.0" cy="1000.0" r="7"/><text class="town-label" x="258.0" y="1004.5" text-anchor="end">Mwanza</text><circle class="town" cx="530.0" cy="1130.0" r="7"/><text class="town-label" x="530.0" y="1156.0" text-anchor="middle">Thyolo</text><circle class="town" cx="350.0" cy="1110.0" r="7"/><text class="town-label" x="338.0" y="1114.5" text-anchor="end">Chikwawa</text><circle class="town" cx="450.0" cy="1230.0" r="7"/><text class="town-label" x="462.0" y="1234.5" text-anchor="start">Nsanje</text></svg><figcaption>Figure 2. Shortest-path tree from Lilongwe (blue). Dashed roads are not used by any shortest route from Lilongwe.</figcaption></figure>
+</section>
+
+<section>
+<h2>4. Implementation <span class="q">Q4 · 10 marks</span></h2>
+<p>The algorithm is implemented in <b>C++17</b> with only the standard library. The repository is organised as follows:</p>
+<table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>data/malawi_roads.csv</code></td><td>The graph: one road per line, <code>town_a,town_b,km</code>.</td></tr>
+<tr><td><code>src/graph.hpp</code></td><td>Graph class (adjacency list), Dijkstra, path reconstruction, Kruskal (with union–find) and Prim.</td></tr>
+<tr><td><code>src/main.cpp</code></td><td>Command line program: shortest route, step-by-step trace, distances from a town, MST, and an interactive menu.</td></tr>
+<tr><td><code>tests/tests.cpp</code></td><td>25 automated tests (section 5).</td></tr>
+<tr><td><code>docs/</code></td><td>Web version of the same algorithms in JavaScript, published with GitHub Pages (section 8).</td></tr>
+<tr><td><code>Makefile</code></td><td><code>make</code> builds everything, <code>make test</code> runs the tests.</td></tr>
+</tbody></table>
+<h3>Design decisions</h3>
+<ul>
+<li><b>Adjacency list</b> (<code>vector&lt;vector&lt;pair&lt;int, long long&gt;&gt;&gt;</code>): uses O(V + E) memory and lets Dijkstra visit only the real neighbours of a town. An adjacency matrix would need 25 × 25 = 625 cells for 38 roads.</li>
+<li><b>Town names are mapped to integer IDs</b> with a <code>std::map</code>, so the algorithms work on fast array indices while the user types names.</li>
+<li><b>Binary heap priority queue</b> (<code>std::priority_queue</code> with <code>std::greater</code>) holding (distance, town) pairs. Instead of a decrease-key operation, a town is pushed again when its distance improves, and outdated entries are skipped when popped (“lazy deletion”). This keeps the code short and gives <b>O((V + E) log V)</b> time.</li>
+<li><b>Path reconstruction</b> uses the <code>prev[]</code> array, following pointers back from the target and reversing.</li>
+<li><b>Input validation:</b> negative weights are rejected (Dijkstra is incorrect with them), as are self loops, malformed lines, non-numeric distances, missing files and unknown town names. Unreachable towns are reported as “No route”.</li>
+</ul>
+<h3>Core code: Dijkstra</h3>
+<pre class="code">struct DijkstraResult {
+    std::vector&lt;long long&gt; dist;  // dist[v] = shortest km from source (INF if unreachable)
+    std::vector&lt;int&gt; prev;        // prev[v] = previous town on the shortest path (-1 if none)
+};
+
+// One step of the algorithm, recorded for the dry run trace.
+struct TraceStep {
+    int settled;                                   // town removed from the queue and finalised
+    long long settledDist;
+    std::vector&lt;std::tuple&lt;int, long long, long long&gt;&gt; relaxed;  // (town, old dist, new dist)
+};
+
+// Dijkstra with a binary heap (std::priority_queue): O((V + E) log V).
+inline DijkstraResult dijkstra(const Graph&amp; g, int source, std::vector&lt;TraceStep&gt;* trace = nullptr) {
+    int n = g.size();
+    if (source &lt; 0 || source &gt;= n) throw std::out_of_range("Source index out of range");
+    DijkstraResult r{std::vector&lt;long long&gt;(n, INF), std::vector&lt;int&gt;(n, -1)};
+    std::vector&lt;bool&gt; done(n, false);
+    using Item = std::pair&lt;long long, int&gt;;  // (distance, town)
+    std::priority_queue&lt;Item, std::vector&lt;Item&gt;, std::greater&lt;Item&gt;&gt; pq;
+
+    r.dist[source] = 0;
+    pq.push({0, source});
+    while (!pq.empty()) {
+        auto [d, u] = pq.top();
+        pq.pop();
+        if (done[u]) continue;  // stale queue entry
+        done[u] = true;
+        TraceStep step{u, d, {}};
+        for (auto [v, w] : g.neighbours(u)) {
+            if (done[v]) continue;
+            if (d + w &lt; r.dist[v]) {
+                step.relaxed.emplace_back(v, r.dist[v], d + w);
+                r.dist[v] = d + w;
+                r.prev[v] = u;
+                pq.push({r.dist[v], v});
+            }
+        }
+        if (trace) trace-&gt;push_back(step);
+    }
+    return r;
+}
+
+// Rebuild the path source -&gt; target from prev[]. Empty if unreachable.
+inline std::vector&lt;int&gt; buildPath(const DijkstraResult&amp; r, int target) {
+    std::vector&lt;int&gt; path;
+    if (r.dist.at(target) &gt;= INF) return path;
+    for (int v = target; v != -1; v = r.prev[v]) path.push_back(v);
+    std::reverse(path.begin(), path.end());
+    return path;
+}</pre>
+<h3>Building and running</h3>
+<pre class="code">$ make                       # builds ./roads and ./run_tests
+$ ./roads path Lilongwe Blantyre
+Shortest route Lilongwe -> Blantyre: 320 km
+  Lilongwe -> Dedza -> Ntcheu -> Blantyre
+$ ./roads trace Mzuzu Salima     # step-by-step dry run
+$ ./roads all Zomba              # distances from Zomba to every town
+$ ./roads mst kruskal            # minimum spanning tree
+$ ./roads                        # interactive menu
+$ make test                      # run the 25 tests</pre>
+</section>
+
+<section>
+<h2>5. Testing and dry run <span class="q">Q5 · 20 marks</span></h2>
+<h3>Test strategy</h3>
+<p>The tests in <code>tests/tests.cpp</code> cover four groups: (a) loading the graph, (b) known shortest routes worked out by hand, (c) an independent cross-check of every pair of towns against a different algorithm (Floyd–Warshall), and (d) error handling and edge cases. Each test prints its input, the expected output and the actual output. The table below was produced by running <code>make test</code>.</p>
+<p class="result-line">Summary: 25 passed, 0 failed</p>
+<table class="tests"><thead><tr><th>ID</th><th>Test</th><th>Input</th><th>Expected</th><th>Actual</th><th>Result</th></tr></thead><tbody><tr><td class="num">T01</td><td>town and road count</td><td class="small">data/malawi_roads.csv</td>
+  <td class="small mono">25 towns, 38 roads</td><td class="small mono">25 towns, 38 roads</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T02</td><td>same start and end</td><td class="small">Lilongwe -&gt; Lilongwe</td>
+  <td class="small mono">0 km: Lilongwe</td><td class="small mono">0 km: Lilongwe</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T03</td><td>direct neighbours</td><td class="small">Lilongwe -&gt; Dedza</td>
+  <td class="small mono">85 km: Lilongwe &gt; Dedza</td><td class="small mono">85 km: Lilongwe &gt; Dedza</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T04</td><td>capital to commercial city</td><td class="small">Lilongwe -&gt; Blantyre</td>
+  <td class="small mono">320 km: Lilongwe &gt; Dedza &gt; Ntcheu &gt; Blantyre</td><td class="small mono">320 km: Lilongwe &gt; Dedza &gt; Ntcheu &gt; Blantyre</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T05</td><td>indirect route beats direct road</td><td class="small">Ntcheu -&gt; Zomba (Ntcheu &gt; Blantyre &gt; Zomba would be 225)</td>
+  <td class="small mono">145 km: Ntcheu &gt; Balaka &gt; Liwonde &gt; Zomba</td><td class="small mono">145 km: Ntcheu &gt; Balaka &gt; Liwonde &gt; Zomba</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T06</td><td>northern tip to southern tip</td><td class="small">Chitipa -&gt; Nsanje</td>
+  <td class="small mono">1169 km: Chitipa &gt; Rumphi &gt; Mzuzu &gt; Mzimba &gt; Kasungu &gt; Lilongwe &gt; Dedza &gt; Ntcheu &gt; Blantyre &gt; Chikwawa &gt; Nsanje</td><td class="small mono">1169 km: Chitipa &gt; Rumphi &gt; Mzuzu &gt; Mzimba &gt; Kasungu &gt; Lilongwe &gt; Dedza &gt; Ntcheu &gt; Blantyre &gt; Chikwawa &gt; Nsanje</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T07</td><td>symmetric (undirected)</td><td class="small">Nsanje -&gt; Chitipa</td>
+  <td class="small mono">1169 km</td><td class="small mono">1169 km</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T08</td><td>lakeshore route</td><td class="small">Nkhata Bay -&gt; Salima</td>
+  <td class="small mono">340 km: Nkhata Bay &gt; Nkhotakota &gt; Salima</td><td class="small mono">340 km: Nkhata Bay &gt; Nkhotakota &gt; Salima</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T09</td><td>north to lake south</td><td class="small">Mzuzu -&gt; Mangochi</td>
+  <td class="small mono">577 km: Mzuzu &gt; Nkhata Bay &gt; Nkhotakota &gt; Salima &gt; Mangochi</td><td class="small mono">577 km: Mzuzu &gt; Nkhata Bay &gt; Nkhotakota &gt; Salima &gt; Mangochi</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T10</td><td>all pairs agree, all paths add up</td><td class="small">every source and target</td>
+  <td class="small mono">0 mismatches</td><td class="small mono">0 mismatches</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T11</td><td>unknown town</td><td class="small">Lilongwe -&gt; Kampala</td>
+  <td class="small mono">error: Unknown town: Kampala</td><td class="small mono">error: Unknown town: Kampala</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T12</td><td>town names are case sensitive</td><td class="small">lilongwe -&gt; Dedza</td>
+  <td class="small mono">error: Unknown town: lilongwe</td><td class="small mono">error: Unknown town: lilongwe</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T13</td><td>negative distance rejected</td><td class="small">addEdge(A, B, -5)</td>
+  <td class="small mono">error: Negative distance on road A - B: Dijkstra needs non-negative weights</td><td class="small mono">error: Negative distance on road A - B: Dijkstra needs non-negative weights</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T14</td><td>non-numeric distance in file</td><td class="small">Lilongwe,Dedza,eighty</td>
+  <td class="small mono">error: Line 1: bad distance 'eighty'</td><td class="small mono">error: Line 1: bad distance 'eighty'</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T15</td><td>wrong separator in file</td><td class="small">Lilongwe;Dedza;85</td>
+  <td class="small mono">error: Line 1: expected town_a,town_b,km</td><td class="small mono">error: Line 1: expected town_a,town_b,km</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T16</td><td>missing data file</td><td class="small">no_such_file.csv</td>
+  <td class="small mono">error: Cannot open no_such_file.csv</td><td class="small mono">error: Cannot open no_such_file.csv</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T17</td><td>unreachable town (island)</td><td class="small">Lilongwe -&gt; Likoma</td>
+  <td class="small mono">unreachable</td><td class="small mono">unreachable</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T18</td><td>MST of disconnected graph is a forest</td><td class="small">{Lilongwe-Dedza 85, Likoma-Chizumulu 10}</td>
+  <td class="small mono">2 edges, total 95, spanning=false</td><td class="small mono">2 edges, total 95, spanning=false</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T19</td><td>zero-weight road allowed</td><td class="small">A-B 0, B-C 4, A-C 9; A -&gt; C</td>
+  <td class="small mono">4 km: A &gt; B &gt; C</td><td class="small mono">4 km: A &gt; B &gt; C</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T20</td><td>parallel roads: shorter one used</td><td class="small">A-B 10 and A-B 3; A -&gt; B</td>
+  <td class="small mono">3 km: A &gt; B</td><td class="small mono">3 km: A &gt; B</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T21</td><td>Kruskal MST size</td><td class="small">Malawi graph</td>
+  <td class="small mono">24 edges, spanning=true</td><td class="small mono">24 edges, spanning=true</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T22</td><td>Kruskal MST total</td><td class="small">Malawi graph</td>
+  <td class="small mono">1889 km</td><td class="small mono">1889 km</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T23</td><td>Prim gives the same total</td><td class="small">Malawi graph, start at Chitipa</td>
+  <td class="small mono">1889 km</td><td class="small mono">1889 km</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T24</td><td>Prim from every start town</td><td class="small">25 different start towns</td>
+  <td class="small mono">0 mismatches</td><td class="small mono">0 mismatches</td><td><span class="pill pass">PASS</span></td></tr><tr><td class="num">T25</td><td>MST connects all towns</td><td class="small">Kruskal edges</td>
+  <td class="small mono">1 component</td><td class="small mono">1 component</td><td><span class="pill pass">PASS</span></td></tr></tbody></table>
+<h3>Errors found during testing</h3>
+<p>When the tests were first run, <b>5 of 25 failed</b> (T04, T06, T07, T09, T22). In every case the program was right and our hand calculation was wrong:</p>
+<ul>
+<li><b>T04 Lilongwe → Blantyre.</b> We expected the route through Balaka (330 km, which we had also mis-added as 305). The program found the direct Ntcheu–Blantyre road: 85 + 75 + 160 = 320 km.</li>
+<li><b>T06/T07 Chitipa → Nsanje.</b> We expected the route to start Chitipa → Karonga → Rumphi (100 + 165 = 265 km) and missed the direct Chitipa–Rumphi road (230 km), which is 35 km shorter. The correct total is 1169 km.</li>
+<li><b>T09 Mzuzu → Mangochi.</b> The route was right but we added the distances wrongly: 47 + 230 + 110 + 190 = 577 km, not 600.</li>
+<li><b>T22 MST total.</b> We guessed the total before doing the Kruskal trace. The trace in section 7 gives 1889 km, and Prim gives the same.</li>
+</ul>
+<p>We trusted the program over our arithmetic only after test T10 showed that Dijkstra agrees with Floyd–Warshall for all 625 pairs and that every reconstructed path adds up to its reported distance. We then re-did the hand calculations and corrected the expected values. This shows why it is useful to test against an independent method rather than only against hand-worked examples.</p>
+<p>Error cases (T11–T16) check that the program fails with a clear message instead of crashing: an unknown town (“Kampala”), wrong capitalisation, a negative distance, a non-numeric distance, the wrong separator and a missing data file. Edge cases (T17–T20) use small separate graphs: an island town with no road (Likoma) is reported as unreachable, a zero-length road is allowed, and when two roads join the same towns the shorter one is used.</p>
+
+<h3>Dry run 1: Dedza → Zomba, tracing the priority queue</h3>
+<p>This dry run follows the code line by line, showing the real contents of the priority queue, including the stale entries left behind by lazy deletion. Entries are written (town, distance) and the queue is shown sorted, smallest first.</p>
+<table class="steps"><thead><tr><th>Iter.</th><th>Action</th><th>Relaxing each road of the settled town</th><th>Priority queue after</th></tr></thead><tbody><tr><td class="num">init</td><td>–</td><td>dist[Dedza] = 0, all others ∞</td><td class="small">(Dedza, 0)</td></tr><tr class=""><td class="num">1</td><td>pop (Dedza, 0)<br>settle Dedza</td><td>Lilongwe: 0 + 85 = 85 &lt; ∞ → update, prev = Dedza<br>Salima: 0 + 125 = 125 &lt; ∞ → update, prev = Dedza<br>Ntcheu: 0 + 75 = 75 &lt; ∞ → update, prev = Dedza</td><td class="small">(Ntcheu, 75) (Lilongwe, 85) (Salima, 125)</td></tr><tr class=""><td class="num">2</td><td>pop (Ntcheu, 75)<br>settle Ntcheu</td><td>Dedza: settled, skip<br>Balaka: 75 + 60 = 135 &lt; ∞ → update, prev = Ntcheu<br>Blantyre: 75 + 160 = 235 &lt; ∞ → update, prev = Ntcheu</td><td class="small">(Lilongwe, 85) (Salima, 125) (Balaka, 135) (Blantyre, 235)</td></tr><tr class=""><td class="num">3</td><td>pop (Lilongwe, 85)<br>settle Lilongwe</td><td>Kasungu: 85 + 127 = 212 &lt; ∞ → update, prev = Lilongwe<br>Dowa: 85 + 55 = 140 &lt; ∞ → update, prev = Lilongwe<br>Salima: 85 + 103 = 188 ≥ 125 → no change<br>Mchinji: 85 + 110 = 195 &lt; ∞ → update, prev = Lilongwe<br>Dedza: settled, skip</td><td class="small">(Salima, 125) (Balaka, 135) (Dowa, 140) (Mchinji, 195) (Kasungu, 212) (Blantyre, 235)</td></tr><tr class=""><td class="num">4</td><td>pop (Salima, 125)<br>settle Salima</td><td>Nkhotakota: 125 + 110 = 235 &lt; ∞ → update, prev = Salima<br>Dowa: 125 + 85 = 210 ≥ 140 → no change<br>Lilongwe: settled, skip<br>Dedza: settled, skip<br>Mangochi: 125 + 190 = 315 &lt; ∞ → update, prev = Salima</td><td class="small">(Balaka, 135) (Dowa, 140) (Mchinji, 195) (Kasungu, 212) (Nkhotakota, 235) (Blantyre, 235) (Mangochi, 315)</td></tr><tr class=""><td class="num">5</td><td>pop (Balaka, 135)<br>settle Balaka</td><td>Ntcheu: settled, skip<br>Liwonde: 135 + 30 = 165 &lt; ∞ → update, prev = Balaka<br>Blantyre: 135 + 110 = 245 ≥ 235 → no change</td><td class="small">(Dowa, 140) (Liwonde, 165) (Mchinji, 195) (Kasungu, 212) (Nkhotakota, 235) (Blantyre, 235) (Mangochi, 315)</td></tr><tr class=""><td class="num">6</td><td>pop (Dowa, 140)<br>settle Dowa</td><td>Ntchisi: 140 + 50 = 190 &lt; ∞ → update, prev = Dowa<br>Lilongwe: settled, skip<br>Salima: settled, skip</td><td class="small">(Liwonde, 165) (Ntchisi, 190) (Mchinji, 195) (Kasungu, 212) (Nkhotakota, 235) (Blantyre, 235) (Mangochi, 315)</td></tr><tr class=""><td class="num">7</td><td>pop (Liwonde, 165)<br>settle Liwonde</td><td>Balaka: settled, skip<br>Mangochi: 165 + 70 = 235 &lt; 315 → update, prev = Liwonde<br>Zomba: 165 + 55 = 220 &lt; ∞ → update, prev = Liwonde</td><td class="small">(Ntchisi, 190) (Mchinji, 195) (Kasungu, 212) (Zomba, 220) (Nkhotakota, 235) (Mangochi, 235) (Blantyre, 235) (Mangochi, 315)</td></tr><tr class=""><td class="num">8</td><td>pop (Ntchisi, 190)<br>settle Ntchisi</td><td>Kasungu: 190 + 90 = 280 ≥ 212 → no change<br>Nkhotakota: 190 + 70 = 260 ≥ 235 → no change<br>Dowa: settled, skip</td><td class="small">(Mchinji, 195) (Kasungu, 212) (Zomba, 220) (Nkhotakota, 235) (Mangochi, 235) (Blantyre, 235) (Mangochi, 315)</td></tr><tr class=""><td class="num">9</td><td>pop (Mchinji, 195)<br>settle Mchinji</td><td>Kasungu: 195 + 140 = 335 ≥ 212 → no change<br>Lilongwe: settled, skip</td><td class="small">(Kasungu, 212) (Zomba, 220) (Nkhotakota, 235) (Mangochi, 235) (Blantyre, 235) (Mangochi, 315)</td></tr><tr class=""><td class="num">10</td><td>pop (Kasungu, 212)<br>settle Kasungu</td><td>Mzimba: 212 + 140 = 352 &lt; ∞ → update, prev = Kasungu<br>Nkhotakota: 212 + 120 = 332 ≥ 235 → no change<br>Ntchisi: settled, skip<br>Lilongwe: settled, skip<br>Mchinji: settled, skip</td><td class="small">(Zomba, 220) (Nkhotakota, 235) (Mangochi, 235) (Blantyre, 235) (Mangochi, 315) (Mzimba, 352)</td></tr><tr class="target"><td class="num">11</td><td>pop (Zomba, 220)<br>settle Zomba</td><td>Liwonde: settled, skip<br>Blantyre: 220 + 65 = 285 ≥ 235 → no change<br>Mulanje: 220 + 100 = 320 &lt; ∞ → update, prev = Zomba<br><b>Target settled: stop.</b></td><td class="small">(Nkhotakota, 235) (Mangochi, 235) (Blantyre, 235) (Mangochi, 315) (Mulanje, 320) (Mzimba, 352)</td></tr></tbody></table>
+<p><b>Result:</b> following prev[] back from Zomba gives Dedza → Ntcheu → Balaka → Liwonde → Zomba, a distance of <b>220 km</b>. The program prints the same:</p>
+<pre class="code">$ ./roads path Dedza Zomba
+Shortest route Dedza -&gt; Zomba: 220 km
+  Dedza -&gt; Ntcheu -&gt; Balaka -&gt; Liwonde -&gt; Zomba
+</pre>
+
+<h3>Dry run 2: program trace for Lilongwe → Blantyre</h3>
+<p>The <code>trace</code> command prints the same steps the algorithm takes. It matches steps 1–15 of the hand run in section 3.</p>
+<pre class="code">$ ./roads trace Lilongwe Blantyre
+Dry run of Dijkstra from Lilongwe
+Step  1: settle Lilongwe (0 km)
+          update Kasungu: inf -&gt; 127
+          update Dowa: inf -&gt; 55
+          update Salima: inf -&gt; 103
+          update Mchinji: inf -&gt; 110
+          update Dedza: inf -&gt; 85
+Step  2: settle Dowa (55 km)
+          update Ntchisi: inf -&gt; 105
+Step  3: settle Dedza (85 km)
+          update Ntcheu: inf -&gt; 160
+Step  4: settle Salima (103 km)
+          update Nkhotakota: inf -&gt; 213
+          update Mangochi: inf -&gt; 293
+Step  5: settle Ntchisi (105 km)
+          update Nkhotakota: 213 -&gt; 175
+Step  6: settle Mchinji (110 km), no updates
+Step  7: settle Kasungu (127 km)
+          update Mzimba: inf -&gt; 267
+Step  8: settle Ntcheu (160 km)
+          update Balaka: inf -&gt; 220
+          update Blantyre: inf -&gt; 320
+Step  9: settle Nkhotakota (175 km)
+          update Nkhata Bay: inf -&gt; 405
+Step 10: settle Balaka (220 km)
+          update Liwonde: inf -&gt; 250
+Step 11: settle Liwonde (250 km)
+          update Zomba: inf -&gt; 305
+Step 12: settle Mzimba (267 km)
+          update Mzuzu: inf -&gt; 377
+Step 13: settle Mangochi (293 km), no updates
+Step 14: settle Zomba (305 km)
+          update Mulanje: inf -&gt; 405
+Step 15: settle Blantyre (320 km)
+          update Mwanza: inf -&gt; 415
+          update Thyolo: inf -&gt; 365
+          update Mulanje: 405 -&gt; 390
+          update Chikwawa: inf -&gt; 370
+Target Blantyre settled, so its distance is final.
+
+Shortest route Lilongwe -&gt; Blantyre: 320 km
+  Lilongwe -&gt; Dedza -&gt; Ntcheu -&gt; Blantyre
+</pre>
+</section>
+
+<section>
+<h2>6. Does the graph have a minimum spanning tree? <span class="q">Q6 · 10 marks</span></h2>
+<p><b>Yes.</b> A spanning tree is a subset of the edges that connects all the vertices with no cycles; it has exactly |V| − 1 edges. A minimum spanning tree (MST) is a spanning tree with the smallest possible total weight. An undirected graph has a spanning tree if and only if it is <b>connected</b>, and then it also has a minimum one, because there are finitely many spanning trees and one of them must have the smallest total. Our graph is undirected, weighted and connected (section 2), so it has an MST.</p>
+<p>The MST of our graph has <b>24 edges</b> and a total length of <b>1889 km</b>, compared with 3,854 km for all 38 roads. The other 14 roads (the cyclomatic number from section 2) each close a cycle and are not needed for connectivity.</p>
+<figure class="map-fig"><svg class="map " viewBox="0 0 790 1260" role="img" aria-label="Map of the Malawi road network graph"><path class="lake" d="M525.0,25.0L515.0,160.0L510.0,270.0L510.0,390.0L515.0,510.0L525.0,600.0L590.0,690.0L648.0,745.0L668.0,710.0L675.0,610.0L645.0,460.0L620.0,310.0L600.0,160.0L585.0,25.0Z"/><text class="lake-label" x="575" y="390" transform="rotate(88 575 390)">Lake Malawi</text><line class="road on-mst" x1="220.0" y1="60.0" x2="470.0" y2="70.0"/><line class="road off-mst" x1="220.0" y1="60.0" x2="370.0" y2="180.0"/><line class="road on-mst" x1="470.0" y1="70.0" x2="370.0" y2="180.0"/><line class="road on-mst" x1="370.0" y1="180.0" x2="370.0" y2="280.0"/><line class="road on-mst" x1="370.0" y1="280.0" x2="480.0" y2="310.0"/><line class="road on-mst" x1="370.0" y1="280.0" x2="220.0" y2="350.0"/><line class="road on-mst" x1="220.0" y1="350.0" x2="180.0" y2="490.0"/><line class="road off-mst" x1="480.0" y1="310.0" x2="480.0" y2="480.0"/><line class="road off-mst" x1="180.0" y1="490.0" x2="480.0" y2="480.0"/><line class="road on-mst" x1="180.0" y1="490.0" x2="320.0" y2="540.0"/><line class="road off-mst" x1="180.0" y1="490.0" x2="220.0" y2="680.0"/><line class="road off-mst" x1="180.0" y1="490.0" x2="110.0" y2="730.0"/><line class="road on-mst" x1="480.0" y1="480.0" x2="320.0" y2="540.0"/><line class="road off-mst" x1="480.0" y1="480.0" x2="500.0" y2="640.0"/><line class="road on-mst" x1="320.0" y1="540.0" x2="320.0" y2="620.0"/><line class="road on-mst" x1="320.0" y1="620.0" x2="220.0" y2="680.0"/><line class="road on-mst" x1="320.0" y1="620.0" x2="500.0" y2="640.0"/><line class="road off-mst" x1="220.0" y1="680.0" x2="500.0" y2="640.0"/><line class="road on-mst" x1="220.0" y1="680.0" x2="110.0" y2="730.0"/><line class="road on-mst" x1="220.0" y1="680.0" x2="370.0" y2="760.0"/><line class="road off-mst" x1="370.0" y1="760.0" x2="500.0" y2="640.0"/><line class="road on-mst" x1="370.0" y1="760.0" x2="370.0" y2="860.0"/><line class="road off-mst" x1="500.0" y1="640.0" x2="670.0" y2="785.0"/><line class="road on-mst" x1="370.0" y1="860.0" x2="510.0" y2="890.0"/><line class="road off-mst" x1="370.0" y1="860.0" x2="510.0" y2="1020.0"/><line class="road on-mst" x1="510.0" y1="890.0" x2="640.0" y2="890.0"/><line class="road off-mst" x1="510.0" y1="890.0" x2="510.0" y2="1020.0"/><line class="road on-mst" x1="640.0" y1="890.0" x2="670.0" y2="785.0"/><line class="road on-mst" x1="640.0" y1="890.0" x2="680.0" y2="980.0"/><line class="road on-mst" x1="680.0" y1="980.0" x2="510.0" y2="1020.0"/><line class="road off-mst" x1="680.0" y1="980.0" x2="700.0" y2="1100.0"/><line class="road on-mst" x1="510.0" y1="1020.0" x2="270.0" y2="1000.0"/><line class="road on-mst" x1="510.0" y1="1020.0" x2="530.0" y2="1130.0"/><line class="road off-mst" x1="510.0" y1="1020.0" x2="700.0" y2="1100.0"/><line class="road on-mst" x1="530.0" y1="1130.0" x2="700.0" y2="1100.0"/><line class="road on-mst" x1="510.0" y1="1020.0" x2="350.0" y2="1110.0"/><line class="road on-mst" x1="350.0" y1="1110.0" x2="450.0" y2="1230.0"/><line class="road off-mst" x1="530.0" y1="1130.0" x2="450.0" y2="1230.0"/><g class="wt hot"><rect x="328.0" y="56.0" width="34" height="18" rx="4"/><text x="345.0" y="69.5">100</text></g><g class="wt"><rect x="278.0" y="111.0" width="34" height="18" rx="4"/><text x="295.0" y="124.5">230</text></g><g class="wt hot"><rect x="403.0" y="116.0" width="34" height="18" rx="4"/><text x="420.0" y="129.5">165</text></g><g class="wt hot"><rect x="353.0" y="221.0" width="34" height="18" rx="4"/><text x="370.0" y="234.5">67</text></g><g class="wt hot"><rect x="408.0" y="286.0" width="34" height="18" rx="4"/><text x="425.0" y="299.5">47</text></g><g class="wt hot"><rect x="278.0" y="306.0" width="34" height="18" rx="4"/><text x="295.0" y="319.5">110</text></g><g class="wt hot"><rect x="183.0" y="411.0" width="34" height="18" rx="4"/><text x="200.0" y="424.5">140</text></g><g class="wt"><rect x="463.0" y="386.0" width="34" height="18" rx="4"/><text x="480.0" y="399.5">230</text></g><g class="wt"><rect x="313.0" y="476.0" width="34" height="18" rx="4"/><text x="330.0" y="489.5">120</text></g><g class="wt hot"><rect x="233.0" y="506.0" width="34" height="18" rx="4"/><text x="250.0" y="519.5">90</text></g><g class="wt"><rect x="183.0" y="576.0" width="34" height="18" rx="4"/><text x="200.0" y="589.5">127</text></g><g class="wt"><rect x="128.0" y="601.0" width="34" height="18" rx="4"/><text x="145.0" y="614.5">140</text></g><g class="wt hot"><rect x="383.0" y="501.0" width="34" height="18" rx="4"/><text x="400.0" y="514.5">70</text></g><g class="wt"><rect x="473.0" y="551.0" width="34" height="18" rx="4"/><text x="490.0" y="564.5">110</text></g><g class="wt hot"><rect x="303.0" y="571.0" width="34" height="18" rx="4"/><text x="320.0" y="584.5">50</text></g><g class="wt hot"><rect x="253.0" y="641.0" width="34" height="18" rx="4"/><text x="270.0" y="654.5">55</text></g><g class="wt hot"><rect x="393.0" y="621.0" width="34" height="18" rx="4"/><text x="410.0" y="634.5">85</text></g><g class="wt"><rect x="343.0" y="651.0" width="34" height="18" rx="4"/><text x="360.0" y="664.5">103</text></g><g class="wt hot"><rect x="148.0" y="696.0" width="34" height="18" rx="4"/><text x="165.0" y="709.5">110</text></g><g class="wt hot"><rect x="278.0" y="711.0" width="34" height="18" rx="4"/><text x="295.0" y="724.5">85</text></g><g class="wt"><rect x="418.0" y="691.0" width="34" height="18" rx="4"/><text x="435.0" y="704.5">125</text></g><g class="wt hot"><rect x="353.0" y="801.0" width="34" height="18" rx="4"/><text x="370.0" y="814.5">75</text></g><g class="wt"><rect x="568.0" y="703.5" width="34" height="18" rx="4"/><text x="585.0" y="717.0">190</text></g><g class="wt hot"><rect x="423.0" y="866.0" width="34" height="18" rx="4"/><text x="440.0" y="879.5">60</text></g><g class="wt"><rect x="423.0" y="931.0" width="34" height="18" rx="4"/><text x="440.0" y="944.5">160</text></g><g class="wt hot"><rect x="558.0" y="881.0" width="34" height="18" rx="4"/><text x="575.0" y="894.5">30</text></g><g class="wt"><rect x="493.0" y="946.0" width="34" height="18" rx="4"/><text x="510.0" y="959.5">110</text></g><g class="wt hot"><rect x="638.0" y="828.5" width="34" height="18" rx="4"/><text x="655.0" y="842.0">70</text></g><g class="wt hot"><rect x="643.0" y="926.0" width="34" height="18" rx="4"/><text x="660.0" y="939.5">55</text></g><g class="wt hot"><rect x="578.0" y="991.0" width="34" height="18" rx="4"/><text x="595.0" y="1004.5">65</text></g><g class="wt"><rect x="673.0" y="1031.0" width="34" height="18" rx="4"/><text x="690.0" y="1044.5">100</text></g><g class="wt hot"><rect x="373.0" y="1001.0" width="34" height="18" rx="4"/><text x="390.0" y="1014.5">95</text></g><g class="wt hot"><rect x="503.0" y="1066.0" width="34" height="18" rx="4"/><text x="520.0" y="1079.5">45</text></g><g class="wt"><rect x="588.0" y="1051.0" width="34" height="18" rx="4"/><text x="605.0" y="1064.5">70</text></g><g class="wt hot"><rect x="598.0" y="1106.0" width="34" height="18" rx="4"/><text x="615.0" y="1119.5">45</text></g><g class="wt hot"><rect x="413.0" y="1056.0" width="34" height="18" rx="4"/><text x="430.0" y="1069.5">50</text></g><g class="wt hot"><rect x="383.0" y="1161.0" width="34" height="18" rx="4"/><text x="400.0" y="1174.5">125</text></g><g class="wt"><rect x="473.0" y="1171.0" width="34" height="18" rx="4"/><text x="490.0" y="1184.5">150</text></g><circle class="town" cx="220.0" cy="60.0" r="7"/><text class="town-label" x="208.0" y="64.5" text-anchor="end">Chitipa</text><circle class="town" cx="470.0" cy="70.0" r="7"/><text class="town-label" x="458.0" y="74.5" text-anchor="end">Karonga</text><circle class="town" cx="370.0" cy="180.0" r="7"/><text class="town-label" x="382.0" y="184.5" text-anchor="start">Rumphi</text><circle class="town" cx="370.0" cy="280.0" r="7"/><text class="town-label" x="358.0" y="284.5" text-anchor="end">Mzuzu</text><circle class="town" cx="480.0" cy="310.0" r="7"/><text class="town-label" x="468.0" y="314.5" text-anchor="end">Nkhata Bay</text><circle class="town" cx="220.0" cy="350.0" r="7"/><text class="town-label" x="208.0" y="354.5" text-anchor="end">Mzimba</text><circle class="town" cx="180.0" cy="490.0" r="7"/><text class="town-label" x="168.0" y="494.5" text-anchor="end">Kasungu</text><circle class="town" cx="480.0" cy="480.0" r="7"/><text class="town-label" x="492.0" y="484.5" text-anchor="start">Nkhotakota</text><circle class="town" cx="320.0" cy="540.0" r="7"/><text class="town-label" x="320.0" y="526.0" text-anchor="middle">Ntchisi</text><circle class="town" cx="220.0" cy="680.0" r="7"/><text class="town-label" x="208.0" y="684.5" text-anchor="end">Lilongwe</text><circle class="town" cx="110.0" cy="730.0" r="7"/><text class="town-label" x="110.0" y="756.0" text-anchor="middle">Mchinji</text><circle class="town" cx="500.0" cy="640.0" r="7"/><text class="town-label" x="512.0" y="644.5" text-anchor="start">Salima</text><circle class="town" cx="320.0" cy="620.0" r="7"/><text class="town-label" x="308.0" y="624.5" text-anchor="end">Dowa</text><circle class="town" cx="370.0" cy="760.0" r="7"/><text class="town-label" x="358.0" y="764.5" text-anchor="end">Dedza</text><circle class="town" cx="370.0" cy="860.0" r="7"/><text class="town-label" x="358.0" y="864.5" text-anchor="end">Ntcheu</text><circle class="town" cx="670.0" cy="785.0" r="7"/><text class="town-label" x="682.0" y="789.5" text-anchor="start">Mangochi</text><circle class="town" cx="510.0" cy="890.0" r="7"/><text class="town-label" x="510.0" y="916.0" text-anchor="middle">Balaka</text><circle class="town" cx="510.0" cy="1020.0" r="7"/><text class="town-label" x="498.0" y="1024.5" text-anchor="end">Blantyre</text><circle class="town" cx="640.0" cy="890.0" r="7"/><text class="town-label" x="652.0" y="894.5" text-anchor="start">Liwonde</text><circle class="town" cx="680.0" cy="980.0" r="7"/><text class="town-label" x="692.0" y="984.5" text-anchor="start">Zomba</text><circle class="town" cx="700.0" cy="1100.0" r="7"/><text class="town-label" x="712.0" y="1104.5" text-anchor="start">Mulanje</text><circle class="town" cx="270.0" cy="1000.0" r="7"/><text class="town-label" x="258.0" y="1004.5" text-anchor="end">Mwanza</text><circle class="town" cx="530.0" cy="1130.0" r="7"/><text class="town-label" x="530.0" y="1156.0" text-anchor="middle">Thyolo</text><circle class="town" cx="350.0" cy="1110.0" r="7"/><text class="town-label" x="338.0" y="1114.5" text-anchor="end">Chikwawa</text><circle class="town" cx="450.0" cy="1230.0" r="7"/><text class="town-label" x="462.0" y="1234.5" text-anchor="start">Nsanje</text></svg><figcaption>Figure 3. Minimum spanning tree (blue, 1889 km). Dashed roads are not in the MST.</figcaption></figure>
+<p><b>The MST is unique.</b> Some roads have equal lengths (for example two roads of 45 km and two of 85 km), which can sometimes allow more than one MST. We checked every road that is not in the tree: in each case it is strictly longer than every road on the tree path between its two towns, so no swap gives an equal total. The MST is therefore the only one.</p>
+<h3>What the MST represents</h3>
+<p>The MST is the <b>cheapest set of roads that still connects every town</b> to every other town. In the Malawi context it answers questions such as:</p>
+<ul>
+<li><b>Road maintenance on a limited budget.</b> If the Roads Authority could only keep 24 roads in good condition, the MST keeps all 25 district centres reachable for the least total kilometres of road to maintain.</li>
+<li><b>Laying infrastructure along roads.</b> ESCOM power lines, fibre-optic cable or water pipelines are usually laid along road reserves. Connecting all 25 towns along the MST needs 1889 km of cable instead of 3,854 km.</li>
+<li><b>Emergency and relief logistics.</b> During floods in the Lower Shire (Chikwawa, Nsanje), the MST shows a minimal backbone that must stay open to keep every town connected.</li>
+</ul>
+<p><b>What the MST does not represent:</b> it is not a set of shortest routes. In the MST the only route from Lilongwe to Blantyre is Lilongwe → Dedza → Ntcheu → Balaka → Liwonde → Zomba → Blantyre, which is <b>370 km</b>, compared with the 320 km found by Dijkstra. The MST minimises the total length of the whole network; Dijkstra minimises the length of one journey.</p>
+</section>
+
+<section>
+<h2>7. Which MST algorithm we would use, and why <span class="q">Q7 · 10 marks</span></h2>
+<table><thead><tr><th></th><th>Kruskal</th><th>Prim</th></tr></thead><tbody>
+<tr><td>Idea</td><td>Sort all roads by length. Add each road unless it joins two towns that are already connected (it would make a cycle).</td><td>Start from one town. Repeatedly add the shortest road from the tree to a town not yet in the tree.</td></tr>
+<tr><td>Data structure</td><td>Sorted edge list + union–find (disjoint sets)</td><td>Priority queue + adjacency list</td></tr>
+<tr><td>Time</td><td>O(E log E)</td><td>O(E log V) with a binary heap; O(V²) with an array</td></tr>
+<tr><td>Best for</td><td>Sparse graphs, data given as an edge list</td><td>Dense graphs, data given as an adjacency matrix</td></tr>
+<tr><td>On our graph</td><td>38 × log₂38 ≈ 200 basic steps</td><td>38 × log₂25 ≈ 176 basic steps</td></tr>
+</tbody></table>
+<p><b>We would use Kruskal's algorithm</b>, for these reasons:</p>
+<ol>
+<li><b>The graph is sparse</b> (38 edges, density 0.13). Kruskal's cost depends on sorting the edges, which is cheap when there are few of them. The O(V²) array version of Prim, which suits dense graphs, would waste work here. For a graph this small the binary-heap versions of both algorithms are practically equal in speed, so the decision comes down to the next points.</li>
+<li><b>Our data is already an edge list.</b> The file <code>malawi_roads.csv</code> is a list of roads with lengths, which is exactly Kruskal's input. No adjacency structure is needed.</li>
+<li><b>It is easy to explain and check by hand.</b> Kruskal processes roads from shortest to longest and makes one yes/no decision for each, as in the trace below. This makes it easy to verify, and it matches how a planner would think: “build the cheapest links first, unless the towns are already connected”.</li>
+<li><b>It handles a disconnected network gracefully.</b> If floods cut the network into pieces (test T18), Kruskal returns a minimum spanning forest, one tree per piece, without any change. Prim only builds the tree of the piece containing its start town.</li>
+</ol>
+<p>We implemented <b>both</b> algorithms to confirm the answer. Prim gives the same 1889 km total from every one of the 25 possible start towns (test T24).</p>
+<h3>Kruskal trace on our graph</h3>
+<table class="compact"><thead><tr><th>#</th><th>Road (sorted by length)</th><th>km</th><th>Decision</th></tr></thead><tbody><tr class=""><td class="num">1</td><td>Balaka – Liwonde</td><td class="num">30</td>
+  <td>add</td></tr><tr class=""><td class="num">2</td><td>Blantyre – Thyolo</td><td class="num">45</td>
+  <td>add</td></tr><tr class=""><td class="num">3</td><td>Thyolo – Mulanje</td><td class="num">45</td>
+  <td>add</td></tr><tr class=""><td class="num">4</td><td>Mzuzu – Nkhata Bay</td><td class="num">47</td>
+  <td>add</td></tr><tr class=""><td class="num">5</td><td>Ntchisi – Dowa</td><td class="num">50</td>
+  <td>add</td></tr><tr class=""><td class="num">6</td><td>Blantyre – Chikwawa</td><td class="num">50</td>
+  <td>add</td></tr><tr class=""><td class="num">7</td><td>Dowa – Lilongwe</td><td class="num">55</td>
+  <td>add</td></tr><tr class=""><td class="num">8</td><td>Liwonde – Zomba</td><td class="num">55</td>
+  <td>add</td></tr><tr class=""><td class="num">9</td><td>Ntcheu – Balaka</td><td class="num">60</td>
+  <td>add</td></tr><tr class=""><td class="num">10</td><td>Zomba – Blantyre</td><td class="num">65</td>
+  <td>add</td></tr><tr class=""><td class="num">11</td><td>Rumphi – Mzuzu</td><td class="num">67</td>
+  <td>add</td></tr><tr class=""><td class="num">12</td><td>Nkhotakota – Ntchisi</td><td class="num">70</td>
+  <td>add</td></tr><tr class=""><td class="num">13</td><td>Liwonde – Mangochi</td><td class="num">70</td>
+  <td>add</td></tr><tr class="muted"><td class="num">14</td><td>Blantyre – Mulanje</td><td class="num">70</td>
+  <td>skip: Blantyre and Mulanje already connected (cycle)</td></tr><tr class=""><td class="num">15</td><td>Dedza – Ntcheu</td><td class="num">75</td>
+  <td>add</td></tr><tr class=""><td class="num">16</td><td>Dowa – Salima</td><td class="num">85</td>
+  <td>add</td></tr><tr class=""><td class="num">17</td><td>Lilongwe – Dedza</td><td class="num">85</td>
+  <td>add</td></tr><tr class=""><td class="num">18</td><td>Kasungu – Ntchisi</td><td class="num">90</td>
+  <td>add</td></tr><tr class=""><td class="num">19</td><td>Blantyre – Mwanza</td><td class="num">95</td>
+  <td>add</td></tr><tr class=""><td class="num">20</td><td>Chitipa – Karonga</td><td class="num">100</td>
+  <td>add</td></tr><tr class="muted"><td class="num">21</td><td>Zomba – Mulanje</td><td class="num">100</td>
+  <td>skip: Zomba and Mulanje already connected (cycle)</td></tr><tr class="muted"><td class="num">22</td><td>Lilongwe – Salima</td><td class="num">103</td>
+  <td>skip: Lilongwe and Salima already connected (cycle)</td></tr><tr class=""><td class="num">23</td><td>Mzuzu – Mzimba</td><td class="num">110</td>
+  <td>add</td></tr><tr class="muted"><td class="num">24</td><td>Nkhotakota – Salima</td><td class="num">110</td>
+  <td>skip: Nkhotakota and Salima already connected (cycle)</td></tr><tr class=""><td class="num">25</td><td>Lilongwe – Mchinji</td><td class="num">110</td>
+  <td>add</td></tr><tr class="muted"><td class="num">26</td><td>Balaka – Blantyre</td><td class="num">110</td>
+  <td>skip: Balaka and Blantyre already connected (cycle)</td></tr><tr class="muted"><td class="num">27</td><td>Kasungu – Nkhotakota</td><td class="num">120</td>
+  <td>skip: Kasungu and Nkhotakota already connected (cycle)</td></tr><tr class="muted"><td class="num">28</td><td>Dedza – Salima</td><td class="num">125</td>
+  <td>skip: Dedza and Salima already connected (cycle)</td></tr><tr class=""><td class="num">29</td><td>Chikwawa – Nsanje</td><td class="num">125</td>
+  <td>add</td></tr><tr class="muted"><td class="num">30</td><td>Kasungu – Lilongwe</td><td class="num">127</td>
+  <td>skip: Kasungu and Lilongwe already connected (cycle)</td></tr><tr class=""><td class="num">31</td><td>Mzimba – Kasungu</td><td class="num">140</td>
+  <td>add</td></tr><tr class="muted"><td class="num">32</td><td>Kasungu – Mchinji</td><td class="num">140</td>
+  <td>skip: Kasungu and Mchinji already connected (cycle)</td></tr><tr class="muted"><td class="num">33</td><td>Thyolo – Nsanje</td><td class="num">150</td>
+  <td>skip: Thyolo and Nsanje already connected (cycle)</td></tr><tr class="muted"><td class="num">34</td><td>Ntcheu – Blantyre</td><td class="num">160</td>
+  <td>skip: Ntcheu and Blantyre already connected (cycle)</td></tr><tr class=""><td class="num">35</td><td>Karonga – Rumphi</td><td class="num">165</td>
+  <td>add</td></tr><tr class="muted"><td class="num">36</td><td>Salima – Mangochi</td><td class="num">190</td>
+  <td>skip: Salima and Mangochi already connected (cycle)</td></tr><tr class="muted"><td class="num">37</td><td>Chitipa – Rumphi</td><td class="num">230</td>
+  <td>skip: Chitipa and Rumphi already connected (cycle)</td></tr><tr class="muted"><td class="num">38</td><td>Nkhata Bay – Nkhotakota</td><td class="num">230</td>
+  <td>skip: Nkhata Bay and Nkhotakota already connected (cycle)</td></tr></tbody></table>
+<p>The tree is complete after 24 additions (the last is Karonga–Rumphi, 165 km). The algorithm still scans the remaining longer roads but none can be added. Total: <b>1889 km</b>.</p>
+<h3>Prim's trace from Lilongwe (for comparison)</h3>
+<table class="compact"><thead><tr><th>#</th><th>Cheapest road leaving the tree</th><th>km</th></tr></thead><tbody><tr><td class="num">1</td><td>Lilongwe → Dowa</td><td class="num">55</td></tr><tr><td class="num">2</td><td>Dowa → Ntchisi</td><td class="num">50</td></tr><tr><td class="num">3</td><td>Ntchisi → Nkhotakota</td><td class="num">70</td></tr><tr><td class="num">4</td><td>Lilongwe → Dedza</td><td class="num">85</td></tr><tr><td class="num">5</td><td>Dedza → Ntcheu</td><td class="num">75</td></tr><tr><td class="num">6</td><td>Ntcheu → Balaka</td><td class="num">60</td></tr><tr><td class="num">7</td><td>Balaka → Liwonde</td><td class="num">30</td></tr><tr><td class="num">8</td><td>Liwonde → Zomba</td><td class="num">55</td></tr><tr><td class="num">9</td><td>Zomba → Blantyre</td><td class="num">65</td></tr><tr><td class="num">10</td><td>Blantyre → Thyolo</td><td class="num">45</td></tr><tr><td class="num">11</td><td>Thyolo → Mulanje</td><td class="num">45</td></tr><tr><td class="num">12</td><td>Blantyre → Chikwawa</td><td class="num">50</td></tr><tr><td class="num">13</td><td>Liwonde → Mangochi</td><td class="num">70</td></tr><tr><td class="num">14</td><td>Dowa → Salima</td><td class="num">85</td></tr><tr><td class="num">15</td><td>Ntchisi → Kasungu</td><td class="num">90</td></tr><tr><td class="num">16</td><td>Blantyre → Mwanza</td><td class="num">95</td></tr><tr><td class="num">17</td><td>Lilongwe → Mchinji</td><td class="num">110</td></tr><tr><td class="num">18</td><td>Chikwawa → Nsanje</td><td class="num">125</td></tr><tr><td class="num">19</td><td>Kasungu → Mzimba</td><td class="num">140</td></tr><tr><td class="num">20</td><td>Mzimba → Mzuzu</td><td class="num">110</td></tr><tr><td class="num">21</td><td>Mzuzu → Nkhata Bay</td><td class="num">47</td></tr><tr><td class="num">22</td><td>Mzuzu → Rumphi</td><td class="num">67</td></tr><tr><td class="num">23</td><td>Rumphi → Karonga</td><td class="num">165</td></tr><tr><td class="num">24</td><td>Karonga → Chitipa</td><td class="num">100</td></tr></tbody></table>
+<p>Total: <b>1889 km</b>, the same tree as Kruskal, built in a different order.</p>
+</section>
+
+<section>
+<h2>8. Deployment <span class="q">Q8 · 10 marks</span></h2>
+<p>The work is deployed in two ways, so it can be tested with nothing to install.</p>
+<h3>Web application (no installation)</h3>
+<p>The same Dijkstra, Kruskal and Prim algorithms are written in JavaScript in <code>docs/graph.js</code> and run in the browser. The page is hosted free on GitHub Pages:</p>
+<p class="result-line">https://mse23-mkapolo-cpu.github.io/DSA/</p>
+<ul>
+<li><b>Shortest route:</b> choose any two towns. The page shows the distance, the route highlighted on the map, and the full step-by-step table of the algorithm with the queue after each step.</li>
+<li><b>Spanning tree:</b> shows the MST on the map with the Kruskal decision table, or Prim's order.</li>
+<li><b>Tests:</b> runs the same test cases as the C++ suite in the browser and shows pass or fail for each.</li>
+</ul>
+<h3>C++ program</h3>
+<p>The C++ source is on GitHub at https://github.com/mse23-mkapolo-cpu/DSA. It can be run without installing anything by opening the repository in GitHub Codespaces (Code → Codespaces → Create), then running <code>make &amp;&amp; ./roads</code> in the terminal. Alternatively, <code>src/graph.hpp</code> and <code>src/main.cpp</code> can be pasted into an online C++ compiler such as OnlineGDB. On a machine with g++ the steps are:</p>
+<pre class="code">git clone https://github.com/mse23-mkapolo-cpu/DSA.git
+cd DSA
+make && make test
+./roads path Lilongwe Blantyre</pre>
+</section>
+
+<section class="appendix">
+<h2>Appendix A: src/graph.hpp</h2><pre class="code small">// graph.hpp - Weighted undirected graph of Malawi towns, with
+// Dijkstra's shortest path and two Minimum Spanning Tree algorithms
+// (Prim and Kruskal).
+#pragma once
+
+#include &lt;algorithm&gt;
+#include &lt;fstream&gt;
+#include &lt;functional&gt;
+#include &lt;limits&gt;
+#include &lt;map&gt;
+#include &lt;queue&gt;
+#include &lt;sstream&gt;
+#include &lt;stdexcept&gt;
+#include &lt;string&gt;
+#include &lt;tuple&gt;
+#include &lt;vector&gt;
+
+namespace mw {
+
+const long long INF = std::numeric_limits&lt;long long&gt;::max() / 4;
+
+struct Edge {
+    int u, v;
+    long long w;
+};
+
+class Graph {
+public:
+    // Add a town if it is new; return its index either way.
+    int addNode(const std::string&amp; name) {
+        auto it = index_.find(name);
+        if (it != index_.end()) return it-&gt;second;
+        int id = static_cast&lt;int&gt;(names_.size());
+        names_.push_back(name);
+        index_[name] = id;
+        adj_.emplace_back();
+        return id;
+    }
+
+    void addEdge(const std::string&amp; a, const std::string&amp; b, long long w) {
+        if (w &lt; 0) throw std::invalid_argument("Negative distance on road " + a + " - " + b +
+                                                ": Dijkstra needs non-negative weights");
+        if (a == b) throw std::invalid_argument("Self loop on " + a + " is not allowed");
+        int u = addNode(a), v = addNode(b);
+        adj_[u].push_back({v, w});
+        adj_[v].push_back({u, w});
+        edges_.push_back({u, v, w});
+    }
+
+    // Load "town_a,town_b,km" lines. Blank lines and lines starting with # are skipped.
+    static Graph fromCsv(std::istream&amp; in) {
+        Graph g;
+        std::string line;
+        int lineNo = 0;
+        while (std::getline(in, line)) {
+            ++lineNo;
+            if (!line.empty() &amp;&amp; line.back() == '\r') line.pop_back();
+            if (line.empty() || line[0] == '#') continue;
+            std::stringstream ss(line);
+            std::string a, b, w;
+            if (!std::getline(ss, a, ',') || !std::getline(ss, b, ',') || !std::getline(ss, w)) {
+                throw std::runtime_error("Line " + std::to_string(lineNo) + ": expected town_a,town_b,km");
+            }
+            long long km;
+            try {
+                size_t used = 0;
+                km = std::stoll(w, &amp;used);
+                if (used != w.size()) throw std::invalid_argument("trailing");
+            } catch (const std::exception&amp;) {
+                throw std::runtime_error("Line " + std::to_string(lineNo) + ": bad distance '" + w + "'");
+            }
+            g.addEdge(a, b, km);
+        }
+        return g;
+    }
+
+    static Graph fromFile(const std::string&amp; path) {
+        std::ifstream f(path);
+        if (!f) throw std::runtime_error("Cannot open " + path);
+        return fromCsv(f);
+    }
+
+    int size() const { return static_cast&lt;int&gt;(names_.size()); }
+    const std::vector&lt;Edge&gt;&amp; edges() const { return edges_; }
+    const std::string&amp; name(int id) const { return names_.at(id); }
+    const std::vector&lt;std::pair&lt;int, long long&gt;&gt;&amp; neighbours(int u) const { return adj_.at(u); }
+
+    int id(const std::string&amp; name) const {
+        auto it = index_.find(name);
+        if (it == index_.end()) throw std::out_of_range("Unknown town: " + name);
+        return it-&gt;second;
+    }
+    bool has(const std::string&amp; name) const { return index_.count(name) &gt; 0; }
+
+private:
+    std::vector&lt;std::string&gt; names_;
+    std::map&lt;std::string, int&gt; index_;
+    std::vector&lt;std::vector&lt;std::pair&lt;int, long long&gt;&gt;&gt; adj_;
+    std::vector&lt;Edge&gt; edges_;
+};
+
+// ---------------------------------------------------------------- Dijkstra
+
+struct DijkstraResult {
+    std::vector&lt;long long&gt; dist;  // dist[v] = shortest km from source (INF if unreachable)
+    std::vector&lt;int&gt; prev;        // prev[v] = previous town on the shortest path (-1 if none)
+};
+
+// One step of the algorithm, recorded for the dry run trace.
+struct TraceStep {
+    int settled;                                   // town removed from the queue and finalised
+    long long settledDist;
+    std::vector&lt;std::tuple&lt;int, long long, long long&gt;&gt; relaxed;  // (town, old dist, new dist)
+};
+
+// Dijkstra with a binary heap (std::priority_queue): O((V + E) log V).
+inline DijkstraResult dijkstra(const Graph&amp; g, int source, std::vector&lt;TraceStep&gt;* trace = nullptr) {
+    int n = g.size();
+    if (source &lt; 0 || source &gt;= n) throw std::out_of_range("Source index out of range");
+    DijkstraResult r{std::vector&lt;long long&gt;(n, INF), std::vector&lt;int&gt;(n, -1)};
+    std::vector&lt;bool&gt; done(n, false);
+    using Item = std::pair&lt;long long, int&gt;;  // (distance, town)
+    std::priority_queue&lt;Item, std::vector&lt;Item&gt;, std::greater&lt;Item&gt;&gt; pq;
+
+    r.dist[source] = 0;
+    pq.push({0, source});
+    while (!pq.empty()) {
+        auto [d, u] = pq.top();
+        pq.pop();
+        if (done[u]) continue;  // stale queue entry
+        done[u] = true;
+        TraceStep step{u, d, {}};
+        for (auto [v, w] : g.neighbours(u)) {
+            if (done[v]) continue;
+            if (d + w &lt; r.dist[v]) {
+                step.relaxed.emplace_back(v, r.dist[v], d + w);
+                r.dist[v] = d + w;
+                r.prev[v] = u;
+                pq.push({r.dist[v], v});
+            }
+        }
+        if (trace) trace-&gt;push_back(step);
+    }
+    return r;
+}
+
+// Rebuild the path source -&gt; target from prev[]. Empty if unreachable.
+inline std::vector&lt;int&gt; buildPath(const DijkstraResult&amp; r, int target) {
+    std::vector&lt;int&gt; path;
+    if (r.dist.at(target) &gt;= INF) return path;
+    for (int v = target; v != -1; v = r.prev[v]) path.push_back(v);
+    std::reverse(path.begin(), path.end());
+    return path;
+}
+
+// ---------------------------------------------------------------- MST
+
+struct MstResult {
+    std::vector&lt;Edge&gt; edges;
+    long long total = 0;
+    bool spanning = false;  // false if the graph is disconnected (then it is a forest)
+};
+
+// Disjoint Set Union with path compression and union by rank.
+class DSU {
+public:
+    explicit DSU(int n) : parent_(n), rank_(n, 0) {
+        for (int i = 0; i &lt; n; ++i) parent_[i] = i;
+    }
+    int find(int x) { return parent_[x] == x ? x : parent_[x] = find(parent_[x]); }
+    bool unite(int a, int b) {
+        a = find(a);
+        b = find(b);
+        if (a == b) return false;
+        if (rank_[a] &lt; rank_[b]) std::swap(a, b);
+        parent_[b] = a;
+        if (rank_[a] == rank_[b]) ++rank_[a];
+        return true;
+    }
+
+private:
+    std::vector&lt;int&gt; parent_, rank_;
+};
+
+// Kruskal: sort edges by weight, add each edge that joins two different components. O(E log E).
+inline MstResult kruskal(const Graph&amp; g) {
+    MstResult r;
+    std::vector&lt;Edge&gt; es = g.edges();
+    std::stable_sort(es.begin(), es.end(), [](const Edge&amp; a, const Edge&amp; b) { return a.w &lt; b.w; });
+    DSU dsu(g.size());
+    for (const Edge&amp; e : es) {
+        if (dsu.unite(e.u, e.v)) {
+            r.edges.push_back(e);
+            r.total += e.w;
+        }
+    }
+    r.spanning = g.size() &gt; 0 &amp;&amp; static_cast&lt;int&gt;(r.edges.size()) == g.size() - 1;
+    return r;
+}
+
+// Prim: grow one tree from `start`, always taking the cheapest edge leaving it. O(E log V).
+inline MstResult prim(const Graph&amp; g, int start = 0) {
+    MstResult r;
+    int n = g.size();
+    if (n == 0) return r;
+    std::vector&lt;bool&gt; inTree(n, false);
+    using Item = std::tuple&lt;long long, int, int&gt;;  // (weight, from, to)
+    std::priority_queue&lt;Item, std::vector&lt;Item&gt;, std::greater&lt;Item&gt;&gt; pq;
+    pq.push({0, -1, start});
+    while (!pq.empty()) {
+        auto [w, from, to] = pq.top();
+        pq.pop();
+        if (inTree[to]) continue;
+        inTree[to] = true;
+        if (from != -1) {
+            r.edges.push_back({from, to, w});
+            r.total += w;
+        }
+        for (auto [v, wv] : g.neighbours(to))
+            if (!inTree[v]) pq.push({wv, to, v});
+    }
+    r.spanning = static_cast&lt;int&gt;(r.edges.size()) == n - 1;
+    return r;
+}
+
+}  // namespace mw
+</pre>
+<h2>Appendix B: src/main.cpp</h2><pre class="code small">// main.cpp - Command line program for the Malawi road network.
+//
+// Usage:
+//   roads [--data FILE] path   &lt;From&gt; &lt;To&gt;    shortest route between two towns
+//   roads [--data FILE] trace  &lt;From&gt; &lt;To&gt;    same, plus a step-by-step dry run of Dijkstra
+//   roads [--data FILE] all    &lt;From&gt;         shortest distance to every town
+//   roads [--data FILE] mst    [prim|kruskal] minimum spanning tree
+//   roads [--data FILE] towns                list the towns
+//   roads [--data FILE]                      interactive menu
+#include &lt;iomanip&gt;
+#include &lt;iostream&gt;
+
+#include "graph.hpp"
+
+using namespace mw;
+
+static std::string distStr(long long d) { return d &gt;= INF ? "inf" : std::to_string(d); }
+
+static void printPath(const Graph&amp; g, const std::string&amp; from, const std::string&amp; to, bool withTrace) {
+    int s = g.id(from), t = g.id(to);
+    std::vector&lt;TraceStep&gt; trace;
+    DijkstraResult r = dijkstra(g, s, withTrace ? &amp;trace : nullptr);
+
+    if (withTrace) {
+        std::cout &lt;&lt; "Dry run of Dijkstra from " &lt;&lt; from &lt;&lt; "\n";
+        int step = 1;
+        for (const TraceStep&amp; st : trace) {
+            std::cout &lt;&lt; "Step " &lt;&lt; std::setw(2) &lt;&lt; step++ &lt;&lt; ": settle " &lt;&lt; g.name(st.settled)
+                      &lt;&lt; " (" &lt;&lt; st.settledDist &lt;&lt; " km)";
+            if (st.relaxed.empty()) std::cout &lt;&lt; ", no updates";
+            for (auto [v, oldD, newD] : st.relaxed)
+                std::cout &lt;&lt; "\n          update " &lt;&lt; g.name(v) &lt;&lt; ": " &lt;&lt; distStr(oldD) &lt;&lt; " -&gt; " &lt;&lt; newD;
+            std::cout &lt;&lt; "\n";
+            if (st.settled == t) {
+                std::cout &lt;&lt; "Target " &lt;&lt; to &lt;&lt; " settled, so its distance is final.\n";
+                break;
+            }
+        }
+        std::cout &lt;&lt; "\n";
+    }
+
+    std::vector&lt;int&gt; path = buildPath(r, t);
+    if (path.empty()) {
+        std::cout &lt;&lt; "No route from " &lt;&lt; from &lt;&lt; " to " &lt;&lt; to &lt;&lt; "\n";
+        return;
+    }
+    std::cout &lt;&lt; "Shortest route " &lt;&lt; from &lt;&lt; " -&gt; " &lt;&lt; to &lt;&lt; ": " &lt;&lt; r.dist[t] &lt;&lt; " km\n";
+    for (size_t i = 0; i &lt; path.size(); ++i) {
+        std::cout &lt;&lt; (i ? " -&gt; " : "  ") &lt;&lt; g.name(path[i]);
+    }
+    std::cout &lt;&lt; "\n";
+}
+
+static void printAll(const Graph&amp; g, const std::string&amp; from) {
+    DijkstraResult r = dijkstra(g, g.id(from));
+    std::cout &lt;&lt; "Shortest distances from " &lt;&lt; from &lt;&lt; ":\n";
+    for (int v = 0; v &lt; g.size(); ++v) {
+        std::cout &lt;&lt; "  " &lt;&lt; std::left &lt;&lt; std::setw(12) &lt;&lt; g.name(v) &lt;&lt; std::right &lt;&lt; std::setw(6)
+                  &lt;&lt; distStr(r.dist[v]) &lt;&lt; " km   via ";
+        std::vector&lt;int&gt; p = buildPath(r, v);
+        for (size_t i = 0; i &lt; p.size(); ++i) std::cout &lt;&lt; (i ? " &gt; " : "") &lt;&lt; g.name(p[i]);
+        std::cout &lt;&lt; "\n";
+    }
+}
+
+static void printMst(const Graph&amp; g, const std::string&amp; algo) {
+    MstResult m;
+    if (algo == "prim") m = prim(g);
+    else if (algo == "kruskal") m = kruskal(g);
+    else throw std::invalid_argument("MST algorithm must be prim or kruskal");
+    std::cout &lt;&lt; "Minimum spanning tree (" &lt;&lt; algo &lt;&lt; "), in the order edges were added:\n";
+    for (const Edge&amp; e : m.edges)
+        std::cout &lt;&lt; "  " &lt;&lt; std::left &lt;&lt; std::setw(12) &lt;&lt; g.name(e.u) &lt;&lt; " - " &lt;&lt; std::setw(12) &lt;&lt; g.name(e.v)
+                  &lt;&lt; std::right &lt;&lt; std::setw(5) &lt;&lt; e.w &lt;&lt; " km\n";
+    std::cout &lt;&lt; "Edges: " &lt;&lt; m.edges.size() &lt;&lt; ", total length: " &lt;&lt; m.total &lt;&lt; " km"
+              &lt;&lt; (m.spanning ? "" : "  (graph is disconnected: this is a spanning forest)") &lt;&lt; "\n";
+}
+
+static void printTowns(const Graph&amp; g) {
+    std::cout &lt;&lt; g.size() &lt;&lt; " towns, " &lt;&lt; g.edges().size() &lt;&lt; " roads\n";
+    for (int v = 0; v &lt; g.size(); ++v) std::cout &lt;&lt; "  " &lt;&lt; g.name(v) &lt;&lt; "\n";
+}
+
+static void interactive(const Graph&amp; g) {
+    while (true) {
+        std::cout &lt;&lt; "\n1) Shortest route  2) Route with dry run  3) Distances from a town\n"
+                     "4) MST (Prim)  5) MST (Kruskal)  6) List towns  0) Quit\nChoice: ";
+        std::string c;
+        if (!std::getline(std::cin, c) || c == "0") return;
+        try {
+            std::string a, b;
+            if (c == "1" || c == "2" || c == "3") {
+                std::cout &lt;&lt; "From town: ";
+                std::getline(std::cin, a);
+            }
+            if (c == "1" || c == "2") {
+                std::cout &lt;&lt; "To town: ";
+                std::getline(std::cin, b);
+            }
+            if (c == "1") printPath(g, a, b, false);
+            else if (c == "2") printPath(g, a, b, true);
+            else if (c == "3") printAll(g, a);
+            else if (c == "4") printMst(g, "prim");
+            else if (c == "5") printMst(g, "kruskal");
+            else if (c == "6") printTowns(g);
+            else std::cout &lt;&lt; "Unknown choice\n";
+        } catch (const std::exception&amp; e) {
+            std::cout &lt;&lt; "Error: " &lt;&lt; e.what() &lt;&lt; "\n";
+        }
+    }
+}
+
+int main(int argc, char** argv) {
+    std::vector&lt;std::string&gt; args(argv + 1, argv + argc);
+    std::string data = "data/malawi_roads.csv";
+    if (args.size() &gt;= 2 &amp;&amp; args[0] == "--data") {
+        data = args[1];
+        args.erase(args.begin(), args.begin() + 2);
+    }
+    try {
+        Graph g = Graph::fromFile(data);
+        if (args.empty()) interactive(g);
+        else if (args[0] == "path" &amp;&amp; args.size() == 3) printPath(g, args[1], args[2], false);
+        else if (args[0] == "trace" &amp;&amp; args.size() == 3) printPath(g, args[1], args[2], true);
+        else if (args[0] == "all" &amp;&amp; args.size() == 2) printAll(g, args[1]);
+        else if (args[0] == "mst") printMst(g, args.size() &gt; 1 ? args[1] : "kruskal");
+        else if (args[0] == "towns") printTowns(g);
+        else {
+            std::cerr &lt;&lt; "Usage: roads [--data FILE] path|trace &lt;From&gt; &lt;To&gt; | all &lt;From&gt; | mst [prim|kruskal] | towns\n";
+            return 2;
+        }
+    } catch (const std::exception&amp; e) {
+        std::cerr &lt;&lt; "Error: " &lt;&lt; e.what() &lt;&lt; "\n";
+        return 1;
+    }
+    return 0;
+}
+</pre>
+<h2>Appendix C: MST program output</h2><pre class="code small">$ ./roads mst kruskal
+Minimum spanning tree (kruskal), in the order edges were added:
+  Balaka       - Liwonde        30 km
+  Blantyre     - Thyolo         45 km
+  Thyolo       - Mulanje        45 km
+  Mzuzu        - Nkhata Bay     47 km
+  Ntchisi      - Dowa           50 km
+  Blantyre     - Chikwawa       50 km
+  Dowa         - Lilongwe       55 km
+  Liwonde      - Zomba          55 km
+  Ntcheu       - Balaka         60 km
+  Zomba        - Blantyre       65 km
+  Rumphi       - Mzuzu          67 km
+  Nkhotakota   - Ntchisi        70 km
+  Liwonde      - Mangochi       70 km
+  Dedza        - Ntcheu         75 km
+  Dowa         - Salima         85 km
+  Lilongwe     - Dedza          85 km
+  Kasungu      - Ntchisi        90 km
+  Blantyre     - Mwanza         95 km
+  Chitipa      - Karonga       100 km
+  Mzuzu        - Mzimba        110 km
+  Lilongwe     - Mchinji       110 km
+  Chikwawa     - Nsanje        125 km
+  Mzimba       - Kasungu       140 km
+  Karonga      - Rumphi        165 km
+Edges: 24, total length: 1889 km
+</pre>
+</section>
+</body></html>

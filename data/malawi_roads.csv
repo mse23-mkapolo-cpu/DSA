@@ -1,0 +1,39 @@
+# Malawi road network: town_a,town_b,distance_km (approximate road distances, undirected)
+Chitipa,Karonga,100
+Chitipa,Rumphi,230
+Karonga,Rumphi,165
+Rumphi,Mzuzu,67
+Mzuzu,Nkhata Bay,47
+Mzuzu,Mzimba,110
+Mzimba,Kasungu,140
+Nkhata Bay,Nkhotakota,230
+Kasungu,Nkhotakota,120
+Kasungu,Ntchisi,90
+Kasungu,Lilongwe,127
+Kasungu,Mchinji,140
+Nkhotakota,Ntchisi,70
+Nkhotakota,Salima,110
+Ntchisi,Dowa,50
+Dowa,Lilongwe,55
+Dowa,Salima,85
+Lilongwe,Salima,103
+Lilongwe,Mchinji,110
+Lilongwe,Dedza,85
+Dedza,Salima,125
+Dedza,Ntcheu,75
+Salima,Mangochi,190
+Ntcheu,Balaka,60
+Ntcheu,Blantyre,160
+Balaka,Liwonde,30
+Balaka,Blantyre,110
+Liwonde,Mangochi,70
+Liwonde,Zomba,55
+Zomba,Blantyre,65
+Zomba,Mulanje,100
+Blantyre,Mwanza,95
+Blantyre,Thyolo,45
+Blantyre,Mulanje,70
+Thyolo,Mulanje,45
+Blantyre,Chikwawa,50
+Chikwawa,Nsanje,125
+Thyolo,Nsanje,150
