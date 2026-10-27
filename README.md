@@ -1,7 +1,7 @@
-# Malawi Road Network: Dijkstra and Minimum Spanning Tree
+# Blantyre City Road Network: Dijkstra and Minimum Spanning Tree
 
-DSA 2026 assignment. A weighted, undirected graph of 25 Malawian towns and 38 roads
-(distances in km), with Dijkstra's shortest path algorithm and two minimum spanning tree
+DSA 2026 assignment. A weighted, undirected graph of 23 places and 37 roads in Blantyre
+city, from Limbe to Blantyre town (distances stored in metres, shown in km), with Dijkstra's shortest path algorithm and two minimum spanning tree
 algorithms (Kruskal and Prim), implemented in C++17.
 
 **Live demo (no installation):** open `docs/index.html`, or the GitHub Pages site for this repository.
@@ -10,23 +10,23 @@ algorithms (Kruskal and Prim), implemented in C++17.
 
 ```sh
 make                              # builds ./roads and ./run_tests
-./roads path Lilongwe Blantyre    # shortest route
-./roads trace Lilongwe Blantyre   # shortest route with a step-by-step dry run
-./roads all Zomba                 # shortest distance from Zomba to every town
+./roads path "Blantyre CBD" Limbe   # shortest route
+./roads trace Mandala Chichiri    # shortest route with a step-by-step dry run
+./roads all Limbe                 # shortest distance from Limbe to every place
 ./roads mst kruskal               # minimum spanning tree (or: prim)
-./roads towns                     # list towns
+./roads places                    # list places
 ./roads                           # interactive menu
 make test                         # run the 25 tests
 ```
 
-Town names with spaces need quotes: `./roads path "Nkhata Bay" Salima`.
+Place names with spaces need quotes: `./roads path "Ginnery Corner" Limbe`.
 Use another graph file with `./roads --data path/to/file.csv ...`.
 
 ## Layout
 
 | Path | Contents |
 |---|---|
-| `data/malawi_roads.csv` | The graph, one road per line: `town_a,town_b,km` |
+| `data/blantyre_roads.csv` | The graph, one road per line: `place_a,place_b,metres` |
 | `src/graph.hpp` | Graph (adjacency list), Dijkstra, Kruskal, Prim |
 | `src/main.cpp` | Command line program |
 | `tests/tests.cpp` | Test suite (prints input, expected and actual output for each test) |
@@ -40,6 +40,6 @@ The site appears at `https://<account>.github.io/<repository>/`.
 
 ## Results
 
-- Lilongwe → Blantyre: 320 km (Lilongwe → Dedza → Ntcheu → Blantyre)
-- Chitipa → Nsanje: 1169 km
-- Minimum spanning tree: 24 roads, 1889 km (out of 3854 km for all roads)
+- Blantyre CBD → Limbe: 9.1 km (Blantyre CBD → Namiwawa → Ginnery Corner → Kanjedza → Limbe)
+- Kameza → Bangwe: 15.0 km
+- Minimum spanning tree: 22 roads, 39.3 km (out of 78.0 km for all roads)

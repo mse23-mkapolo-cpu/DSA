@@ -1,4 +1,4 @@
-// graph.hpp - Weighted undirected graph of Malawi towns, with
+// graph.hpp - Weighted undirected graph of places in Blantyre city, with
 // Dijkstra's shortest path and two Minimum Spanning Tree algorithms
 // (Prim and Kruskal).
 #pragma once
@@ -26,7 +26,7 @@ struct Edge {
 
 class Graph {
 public:
-    // Add a town if it is new; return its index either way.
+    // Add a place if it is new; return its index either way.
     int addNode(const std::string& name) {
         auto it = index_.find(name);
         if (it != index_.end()) return it->second;
@@ -47,7 +47,7 @@ public:
         edges_.push_back({u, v, w});
     }
 
-    // Load "town_a,town_b,km" lines. Blank lines and lines starting with # are skipped.
+    // Load "place_a,place_b,metres" lines. Blank lines and lines starting with # are skipped.
     static Graph fromCsv(std::istream& in) {
         Graph g;
         std::string line;
@@ -59,17 +59,17 @@ public:
             std::stringstream ss(line);
             std::string a, b, w;
             if (!std::getline(ss, a, ',') || !std::getline(ss, b, ',') || !std::getline(ss, w)) {
-                throw std::runtime_error("Line " + std::to_string(lineNo) + ": expected town_a,town_b,km");
+                throw std::runtime_error("Line " + std::to_string(lineNo) + ": expected place_a,place_b,metres");
             }
-            long long km;
+            long long metres;
             try {
                 size_t used = 0;
-                km = std::stoll(w, &used);
+                metres = std::stoll(w, &used);
                 if (used != w.size()) throw std::invalid_argument("trailing");
             } catch (const std::exception&) {
                 throw std::runtime_error("Line " + std::to_string(lineNo) + ": bad distance '" + w + "'");
             }
-            g.addEdge(a, b, km);
+            g.addEdge(a, b, metres);
         }
         return g;
     }
@@ -87,7 +87,7 @@ public:
 
     int id(const std::string& name) const {
         auto it = index_.find(name);
-        if (it == index_.end()) throw std::out_of_range("Unknown town: " + name);
+        if (it == index_.end()) throw std::out_of_range("Unknown place: " + name);
         return it->second;
     }
     bool has(const std::string& name) const { return index_.count(name) > 0; }
@@ -102,15 +102,15 @@ private:
 // ---------------------------------------------------------------- Dijkstra
 
 struct DijkstraResult {
-    std::vector<long long> dist;  // dist[v] = shortest km from source (INF if unreachable)
-    std::vector<int> prev;        // prev[v] = previous town on the shortest path (-1 if none)
+    std::vector<long long> dist;  // dist[v] = shortest distance in metres from source (INF if unreachable)
+    std::vector<int> prev;        // prev[v] = previous place on the shortest path (-1 if none)
 };
 
 // One step of the algorithm, recorded for the dry run trace.
 struct TraceStep {
-    int settled;                                   // town removed from the queue and finalised
+    int settled;                                   // place removed from the queue and finalised
     long long settledDist;
-    std::vector<std::tuple<int, long long, long long>> relaxed;  // (town, old dist, new dist)
+    std::vector<std::tuple<int, long long, long long>> relaxed;  // (place, old dist, new dist)
 };
 
 // Dijkstra with a binary heap (std::priority_queue): O((V + E) log V).
@@ -119,7 +119,7 @@ inline DijkstraResult dijkstra(const Graph& g, int source, std::vector<TraceStep
     if (source < 0 || source >= n) throw std::out_of_range("Source index out of range");
     DijkstraResult r{std::vector<long long>(n, INF), std::vector<int>(n, -1)};
     std::vector<bool> done(n, false);
-    using Item = std::pair<long long, int>;  // (distance, town)
+    using Item = std::pair<long long, int>;  // (distance, place)
     std::priority_queue<Item, std::vector<Item>, std::greater<Item>> pq;
 
     r.dist[source] = 0;

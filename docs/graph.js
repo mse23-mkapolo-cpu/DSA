@@ -1,81 +1,73 @@
-// graph.js - Malawi road network data, algorithms and map drawing.
+// graph.js - Blantyre city road network data, algorithms and map drawing.
 // Shared by the web demo (index.html) and the PDF report.
 // Mirrors src/graph.hpp and data/malawi_roads.csv.
 
-// Schematic town positions [x, y] (north at the top, roughly geographic but
-// spread out so every road and distance is readable) and the label side.
+// Schematic positions [x, y] of places in Blantyre city (Blantyre town in the
+// west, Limbe in the east, north at the top) and the side for the label.
 const TOWNS = {
-  "Chitipa":    [150,   50, "w"],
-  "Karonga":    [400,   60, "w"],
-  "Rumphi":     [300,  170, "e"],
-  "Mzuzu":      [300,  270, "w"],
-  "Nkhata Bay": [410,  300, "w"],
-  "Mzimba":     [150,  340, "w"],
-  "Kasungu":    [110,  480, "w"],
-  "Nkhotakota": [410,  470, "e"],
-  "Ntchisi":    [250,  530, "n"],
-  "Dowa":       [250,  610, "w"],
-  "Salima":     [430,  630, "e"],
-  "Lilongwe":   [150,  670, "w"],
-  "Mchinji":    [40,   720, "s"],
-  "Dedza":      [300,  750, "w"],
-  "Ntcheu":     [300,  850, "w"],
-  "Mangochi":   [600,  775, "e"],
-  "Balaka":     [440,  880, "s"],
-  "Liwonde":    [570,  880, "e"],
-  "Zomba":      [610,  970, "e"],
-  "Blantyre":   [440, 1010, "w"],
-  "Mwanza":     [200,  990, "w"],
-  "Chikwawa":   [280, 1100, "w"],
-  "Thyolo":     [460, 1120, "s"],
-  "Mulanje":    [630, 1090, "e"],
-  "Nsanje":     [380, 1220, "e"],
+  "Kameza":         [90,   40, "n"],
+  "Chilomoni":      [60,  170, "w"],
+  "Nyambadwe":      [250,  70, "n"],
+  "Ndirande":       [430,  40, "n"],
+  "Machinjiri":     [820,  50, "n"],
+  "Blantyre CBD":   [200, 230, "w"],
+  "Namiwawa":       [330, 160, "e"],
+  "Makata":         [530, 140, "e"],
+  "Ginnery Corner": [440, 250, "n"],
+  "QECH":           [320, 300, "s"],
+  "Mandala":        [230, 330, "w"],
+  "Sunnyside":      [110, 300, "w"],
+  "Chichiri":       [450, 360, "e"],
+  "Manja":          [20,  320, "w"],
+  "Zingwangwa":     [60,  450, "w"],
+  "Soche":          [180, 430, "s"],
+  "Naperi":         [300, 460, "s"],
+  "Chitawira":      [440, 480, "s"],
+  "Kanjedza":       [650, 250, "n"],
+  "Chinyonga":      [640, 420, "s"],
+  "Mpingwe":        [790, 390, "s"],
+  "Limbe":          [800, 250, "e"],
+  "Bangwe":         [930, 330, "e"],
 };
 
-const ROADS_CSV = `Chitipa,Karonga,100
-Chitipa,Rumphi,230
-Karonga,Rumphi,165
-Rumphi,Mzuzu,67
-Mzuzu,Nkhata Bay,47
-Mzuzu,Mzimba,110
-Mzimba,Kasungu,140
-Nkhata Bay,Nkhotakota,230
-Kasungu,Nkhotakota,120
-Kasungu,Ntchisi,90
-Kasungu,Lilongwe,127
-Kasungu,Mchinji,140
-Nkhotakota,Ntchisi,70
-Nkhotakota,Salima,110
-Ntchisi,Dowa,50
-Dowa,Lilongwe,55
-Dowa,Salima,85
-Lilongwe,Salima,103
-Lilongwe,Mchinji,110
-Lilongwe,Dedza,85
-Dedza,Salima,125
-Dedza,Ntcheu,75
-Salima,Mangochi,190
-Ntcheu,Balaka,60
-Ntcheu,Blantyre,160
-Balaka,Liwonde,30
-Balaka,Blantyre,110
-Liwonde,Mangochi,70
-Liwonde,Zomba,55
-Zomba,Blantyre,65
-Zomba,Mulanje,100
-Blantyre,Mwanza,95
-Blantyre,Thyolo,45
-Blantyre,Mulanje,70
-Thyolo,Mulanje,45
-Blantyre,Chikwawa,50
-Chikwawa,Nsanje,125
-Thyolo,Nsanje,150`;
-
-// Lake Malawi outline in the same schematic coordinates.
-const LAKE = [
-  [455, 15], [445, 150], [440, 260], [440, 380], [445, 500], [455, 590], [520, 680],
-  [578, 735], [598, 700], [605, 600], [575, 450], [550, 300], [530, 150], [515, 15],
-];
+// Road distances in metres (same as data/blantyre_roads.csv).
+const ROADS_CSV = `Blantyre CBD,Mandala,1500
+Blantyre CBD,Chilomoni,2500
+Blantyre CBD,Nyambadwe,1800
+Blantyre CBD,Sunnyside,1300
+Blantyre CBD,Namiwawa,2000
+Blantyre CBD,QECH,2200
+Chilomoni,Kameza,2000
+Kameza,Nyambadwe,2400
+Chilomoni,Manja,2600
+Manja,Zingwangwa,2300
+Zingwangwa,Soche,1600
+Sunnyside,Soche,1800
+Soche,Naperi,1500
+Naperi,Chitawira,1700
+Mandala,QECH,1000
+Mandala,Naperi,2000
+QECH,Chichiri,1200
+QECH,Ginnery Corner,1500
+Namiwawa,Ginnery Corner,1600
+Nyambadwe,Ndirande,2500
+Namiwawa,Ndirande,2200
+Ndirande,Makata,2000
+Ginnery Corner,Makata,1400
+Ginnery Corner,Chichiri,1300
+Chichiri,Chitawira,1400
+Ginnery Corner,Kanjedza,3000
+Makata,Kanjedza,2800
+Chichiri,Chinyonga,3200
+Chitawira,Chinyonga,3400
+Kanjedza,Chinyonga,1500
+Kanjedza,Limbe,2500
+Chinyonga,Mpingwe,1800
+Mpingwe,Limbe,1200
+Limbe,Bangwe,2800
+Mpingwe,Bangwe,2500
+Limbe,Machinjiri,3500
+Ndirande,Machinjiri,4500`;
 
 function parseGraph(csv) {
   const names = [], index = new Map(), adj = [], edges = [];
@@ -87,7 +79,7 @@ function parseGraph(csv) {
     const line = raw.trim();
     if (!line || line.startsWith("#")) return;
     const parts = line.split(",");
-    if (parts.length !== 3) throw new Error(`Line ${i + 1}: expected town_a,town_b,km`);
+    if (parts.length !== 3) throw new Error(`Line ${i + 1}: expected place_a,place_b,metres`);
     const [a, b, w] = parts;
     if (!/^-?\d+$/.test(w.trim())) throw new Error(`Line ${i + 1}: bad distance '${w}'`);
     const km = Number(w);
@@ -191,18 +183,21 @@ function prim(g, start = 0) {
 
 // Draw the network as an SVG string.
 // opts: { path: [ids], mst: [edges], scale, showWeights, cls: extra class }
+// Metres to a km string with one decimal, e.g. 1500 -> "1.5".
+function km(m) { return m === Infinity ? "∞" : (m / 1000).toFixed(1); }
+
 function drawMap(g, opts = {}) {
-  const X = (x) => x + 70, Y = (y) => y + 10;
-  const W = 790, H = 1260;
+  const X = (x) => x + 110, Y = (y) => y + 36;
+  const W = 1160, H = 600;
   const pos = (id) => { const t = TOWNS[g.names[id]]; return [X(t[0]), Y(t[1])]; };
   const key = (u, v) => (u < v ? `${u}-${v}` : `${v}-${u}`);
   const onPath = new Set();
   (opts.path || []).forEach((v, i, p) => { if (i) onPath.add(key(p[i - 1], v)); });
   const onMst = new Set((opts.mst || []).map((e) => key(e.u, e.v)));
   const pathNodes = new Set(opts.path || []);
-  let s = `<svg class="map ${opts.cls || ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of the Malawi road network graph">`;
-  s += `<path class="lake" d="M${LAKE.map(([lo, la]) => `${X(lo).toFixed(1)},${Y(la).toFixed(1)}`).join("L")}Z"/>`;
-  s += `<text class="lake-label" x="${X(505)}" y="${Y(380)}" transform="rotate(88 ${X(505)} ${Y(380)})">Lake Malawi</text>`;
+  let s = `<svg class="map ${opts.cls || ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Graph of the Blantyre city road network">`;
+  s += `<text class="lake-label" x="${X(110)}" y="${Y(545)}">Blantyre side</text>`;
+  s += `<text class="lake-label" x="${X(760)}" y="${Y(545)}">Limbe side</text>`;
   for (const e of g.edges) {
     const [x1, y1] = pos(e.u), [x2, y2] = pos(e.v);
     const kk = key(e.u, e.v);
@@ -216,7 +211,7 @@ function drawMap(g, opts = {}) {
       const kk = key(e.u, e.v);
       const hot = onPath.has(kk) || onMst.has(kk) ? " hot" : "";
       s += `<g class="wt${hot}"><rect x="${(mx - 17).toFixed(1)}" y="${(my - 9).toFixed(1)}" width="34" height="18" rx="4"/>` +
-           `<text x="${mx.toFixed(1)}" y="${(my + 4.5).toFixed(1)}">${e.w}</text></g>`;
+           `<text x="${mx.toFixed(1)}" y="${(my + 4.5).toFixed(1)}">${km(e.w)}</text></g>`;
     }
   }
   g.names.forEach((name, id) => {
@@ -231,4 +226,4 @@ function drawMap(g, opts = {}) {
   return s + "</svg>";
 }
 
-if (typeof module !== "undefined") module.exports = { TOWNS, ROADS_CSV, parseGraph, dijkstra, buildPath, kruskal, prim, drawMap };
+if (typeof module !== "undefined") module.exports = { km, TOWNS, ROADS_CSV, parseGraph, dijkstra, buildPath, kruskal, prim, drawMap };

@@ -1,0 +1,39 @@
+# Blantyre city road network, Limbe to Blantyre town: place_a,place_b,distance_m
+# Distances are approximate road distances in metres (rounded to 100 m), undirected.
+Blantyre CBD,Mandala,1500
+Blantyre CBD,Chilomoni,2500
+Blantyre CBD,Nyambadwe,1800
+Blantyre CBD,Sunnyside,1300
+Blantyre CBD,Namiwawa,2000
+Blantyre CBD,QECH,2200
+Chilomoni,Kameza,2000
+Kameza,Nyambadwe,2400
+Chilomoni,Manja,2600
+Manja,Zingwangwa,2300
+Zingwangwa,Soche,1600
+Sunnyside,Soche,1800
+Soche,Naperi,1500
+Naperi,Chitawira,1700
+Mandala,QECH,1000
+Mandala,Naperi,2000
+QECH,Chichiri,1200
+QECH,Ginnery Corner,1500
+Namiwawa,Ginnery Corner,1600
+Nyambadwe,Ndirande,2500
+Namiwawa,Ndirande,2200
+Ndirande,Makata,2000
+Ginnery Corner,Makata,1400
+Ginnery Corner,Chichiri,1300
+Chichiri,Chitawira,1400
+Ginnery Corner,Kanjedza,3000
+Makata,Kanjedza,2800
+Chichiri,Chinyonga,3200
+Chitawira,Chinyonga,3400
+Kanjedza,Chinyonga,1500
+Kanjedza,Limbe,2500
+Chinyonga,Mpingwe,1800
+Mpingwe,Limbe,1200
+Limbe,Bangwe,2800
+Mpingwe,Bangwe,2500
+Limbe,Machinjiri,3500
+Ndirande,Machinjiri,4500
