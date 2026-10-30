@@ -27,11 +27,13 @@ static std::string pathStr(const Graph& g, const std::vector<int>& p) {
     return s;
 }
 
-// Metres to km with one decimal, e.g. 1500 -> "1.5 km".
+// Metres to km, two decimals only when needed: 1000 -> "1.0 km", 450 -> "0.45 km".
 static std::string km(long long m) {
     std::ostringstream o;
-    o << std::fixed << std::setprecision(1) << m / 1000.0 << " km";
-    return o.str();
+    o << std::fixed << std::setprecision(2) << m / 1000.0;
+    std::string s = o.str();
+    if (s.back() == '0') s.pop_back();
+    return s + " km";
 }
 
 static std::string route(const Graph& g, const std::string& a, const std::string& b) {
@@ -72,26 +74,36 @@ int main(int argc, char** argv) {
     Graph g = Graph::fromFile(data);
 
     std::cout << "=== Loading the graph ===\n";
-    check("T01 place and road count", data, "23 places, 37 roads",
+    check("T01 place and road count", data, "22 places, 32 roads",
           std::to_string(g.size()) + " places, " + std::to_string(g.edges().size()) + " roads");
 
     std::cout << "\n=== Dijkstra: shortest routes ===\n";
     check("T02 same start and end", "Mandala -> Mandala", "0.0 km: Mandala", route(g, "Mandala", "Mandala"));
-    check("T03 direct neighbours", "Blantyre CBD -> Mandala", "1.5 km: Blantyre CBD > Mandala",
-          route(g, "Blantyre CBD", "Mandala"));
-    check("T04 Blantyre town to Limbe", "Blantyre CBD -> Limbe",
-          "9.1 km: Blantyre CBD > Namiwawa > Ginnery Corner > Kanjedza > Limbe", route(g, "Blantyre CBD", "Limbe"));
-    check("T05 route through residential areas", "Soche -> Chichiri",
-          "4.6 km: Soche > Naperi > Chitawira > Chichiri", route(g, "Soche", "Chichiri"));
-    check("T06 far west to far east", "Kameza -> Bangwe",
-          "15.0 km: Kameza > Nyambadwe > Ndirande > Makata > Kanjedza > Limbe > Bangwe", route(g, "Kameza", "Bangwe"));
-    check("T07 symmetric (undirected)", "Bangwe -> Kameza", "15.0 km", route(g, "Bangwe", "Kameza").substr(0, 7));
-    check("T08 west to north-east", "Manja -> Machinjiri",
-          "13.8 km: Manja > Chilomoni > Blantyre CBD > Namiwawa > Ndirande > Machinjiri", route(g, "Manja", "Machinjiri"));
-    check("T09 south-west to Limbe side", "Zingwangwa -> Mpingwe",
-          "10.0 km: Zingwangwa > Soche > Naperi > Chitawira > Chinyonga > Mpingwe", route(g, "Zingwangwa", "Mpingwe"));
+    check("T03 direct neighbours", "Mandala -> Blantyre Market", "0.21 km: Mandala > Blantyre Market",
+          route(g, "Mandala", "Blantyre Market"));
+    check("T04 Limbe Market to Blantyre Market", "Limbe Market -> Blantyre Market",
+          "7.76 km: Limbe Market > Liquid Lounge Roundabout > Puma Energy Kanjedza > Automotive Products Limited > "
+          "Kamba Pork Market > Red Cross Malawi > Mandala > Blantyre Market",
+          route(g, "Limbe Market", "Blantyre Market"));
+    check("T05 Limbe Market to Chichiri", "Limbe Market -> Chichiri Shopping Mall",
+          "4.8 km: Limbe Market > Liquid Lounge Roundabout > Puma Energy Kanjedza > Automotive Products Limited > "
+          "Chichiri Shopping Mall",
+          route(g, "Limbe Market", "Chichiri Shopping Mall"));
+    check("T06 southern route", "Yanakis Roundabout -> HHI",
+          "8.3 km: Yanakis Roundabout > Reunion Insurance Roundabout > Independence Arch > Chichiri Shopping Mall > "
+          "Castel > HHI",
+          route(g, "Yanakis Roundabout", "HHI"));
+    check("T07 symmetric (undirected)", "Blantyre Market -> Limbe Market", "7.76 km",
+          route(g, "Blantyre Market", "Limbe Market").substr(0, 7));
+    check("T08 northern start", "St Columba -> Mandala",
+          "5.1 km: St Columba > Automotive Products Limited > Kamba Pork Market > Red Cross Malawi > Mandala",
+          route(g, "St Columba", "Mandala"));
+    check("T09 south to north-east", "Reunion Insurance Roundabout -> Stereo Night Club",
+          "7.7 km: Reunion Insurance Roundabout > Independence Arch > Chichiri Shopping Mall > Red Cross Malawi > "
+          "Kamba Pork Market > Stereo Night Club",
+          route(g, "Reunion Insurance Roundabout", "Stereo Night Club"));
 
-    std::cout << "\n=== Dijkstra cross-checked against Floyd-Warshall (all 529 pairs) ===\n";
+    std::cout << "\n=== Dijkstra cross-checked against Floyd-Warshall (all 484 pairs) ===\n";
     {
         auto fw = floyd(g);
         int mismatches = 0;
@@ -113,10 +125,10 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "\n=== Errors and edge cases ===\n";
-    check("T11 unknown place", "Blantyre CBD -> Lilongwe", "error: Unknown place: Lilongwe",
-          errorOf([&] { route(g, "Blantyre CBD", "Lilongwe"); }));
-    check("T12 place names are case sensitive", "limbe -> Mandala", "error: Unknown place: limbe",
-          errorOf([&] { route(g, "limbe", "Mandala"); }));
+    check("T11 unknown place", "Limbe Market -> Lilongwe", "error: Unknown place: Lilongwe",
+          errorOf([&] { route(g, "Limbe Market", "Lilongwe"); }));
+    check("T12 place names are case sensitive", "limbe market -> Mandala", "error: Unknown place: limbe market",
+          errorOf([&] { route(g, "limbe market", "Mandala"); }));
     {
         Graph neg;
         check("T13 negative distance rejected", "addEdge(A, B, -500)",
@@ -124,13 +136,14 @@ int main(int argc, char** argv) {
               errorOf([&] { neg.addEdge("A", "B", -500); }));
     }
     {
-        std::istringstream bad("Limbe,Bangwe,2.8km\n");
-        check("T14 distance not in whole metres", "Limbe,Bangwe,2.8km", "error: Line 1: bad distance '2.8km'",
+        std::istringstream bad("Mandala,Blantyre Market,0.21km\n");
+        check("T14 distance not in whole metres", "Mandala,Blantyre Market,0.21km",
+              "error: Line 1: bad distance '0.21km'",
               errorOf([&] { Graph::fromCsv(bad); }));
     }
     {
-        std::istringstream bad("Limbe;Bangwe;2800\n");
-        check("T15 wrong separator in file", "Limbe;Bangwe;2800", "error: Line 1: expected place_a,place_b,metres",
+        std::istringstream bad("Mandala;Blantyre Market;210\n");
+        check("T15 wrong separator in file", "Mandala;Blantyre Market;210", "error: Line 1: expected place_a,place_b,metres",
               errorOf([&] { Graph::fromCsv(bad); }));
     }
     check("T16 missing data file", "no_such_file.csv", "error: Cannot open no_such_file.csv",
@@ -160,15 +173,15 @@ int main(int argc, char** argv) {
 
     std::cout << "\n=== Minimum spanning tree ===\n";
     MstResult k = kruskal(g), p = prim(g);
-    check("T21 Kruskal MST size", "Blantyre graph", "22 edges, spanning=true",
+    check("T21 Kruskal MST size", "Blantyre graph", "21 edges, spanning=true",
           std::to_string(k.edges.size()) + " edges, spanning=" + (k.spanning ? "true" : "false"));
-    check("T22 Kruskal MST total", "Blantyre graph", "39.3 km", km(k.total));
+    check("T22 Kruskal MST total", "Blantyre graph", "20.66 km", km(k.total));
     check("T23 Prim gives the same total", "Blantyre graph, start at " + g.name(0), km(k.total), km(p.total));
     {
         int mismatch = 0;
         for (int s = 0; s < g.size(); ++s)
             if (prim(g, s).total != k.total) ++mismatch;
-        check("T24 Prim from every start place", "23 different start places", "0 mismatches",
+        check("T24 Prim from every start place", "22 different start places", "0 mismatches",
               std::to_string(mismatch) + " mismatches");
     }
     {

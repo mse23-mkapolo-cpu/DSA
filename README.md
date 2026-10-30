@@ -1,7 +1,8 @@
 # Blantyre City Road Network: Dijkstra and Minimum Spanning Tree
 
-DSA 2026 assignment. A weighted, undirected graph of 23 places and 37 roads in Blantyre
-city, from Limbe to Blantyre town (distances stored in metres, shown in km), with Dijkstra's shortest path algorithm and two minimum spanning tree
+DSA 2026 assignment. A weighted, undirected graph of 22 places and 32 roads in Blantyre
+city, from Limbe Market to Blantyre Market, taken from our hand-drawn graph
+(`report/hand_drawn_graph.jpg`; distances stored in metres, shown in km), with Dijkstra's shortest path algorithm and two minimum spanning tree
 algorithms (Kruskal and Prim), implemented in C++17.
 
 **Live demo (no installation):** open `docs/index.html`, or the GitHub Pages site for this repository.
@@ -10,16 +11,16 @@ algorithms (Kruskal and Prim), implemented in C++17.
 
 ```sh
 make                              # builds ./roads and ./run_tests
-./roads path "Blantyre CBD" Limbe   # shortest route
-./roads trace Mandala Chichiri    # shortest route with a step-by-step dry run
-./roads all Limbe                 # shortest distance from Limbe to every place
+./roads path "Limbe Market" "Blantyre Market"   # shortest route
+./roads trace "Red Cross Malawi" "Blantyre Clock Tower"   # with a step-by-step dry run
+./roads all "Limbe Market"        # shortest distance from Limbe Market to every place
 ./roads mst kruskal               # minimum spanning tree (or: prim)
 ./roads places                    # list places
 ./roads                           # interactive menu
 make test                         # run the 25 tests
 ```
 
-Place names with spaces need quotes: `./roads path "Ginnery Corner" Limbe`.
+Place names with spaces need quotes, as above.
 Use another graph file with `./roads --data path/to/file.csv ...`.
 
 ## Layout
@@ -40,6 +41,6 @@ The site appears at `https://<account>.github.io/<repository>/`.
 
 ## Results
 
-- Blantyre CBD → Limbe: 9.1 km (Blantyre CBD → Namiwawa → Ginnery Corner → Kanjedza → Limbe)
-- Kameza → Bangwe: 15.0 km
-- Minimum spanning tree: 22 roads, 39.3 km (out of 78.0 km for all roads)
+- Limbe Market → Blantyre Market: 7.76 km (Limbe Market → Liquid Lounge Roundabout → Puma Energy Kanjedza →
+  Automotive Products Limited → Kamba Pork Market → Red Cross Malawi → Mandala → Blantyre Market)
+- Minimum spanning tree: 21 roads, 20.66 km (out of 46.06 km for all roads)

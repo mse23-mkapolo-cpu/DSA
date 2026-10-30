@@ -54,3 +54,4 @@ figcaption { font-size: 9pt; color: var(--muted); margin-top: 4px; }
 ul, ol { padding-left: 20px; } li { margin: 3px 0; }
 p { margin: 6px 0; }
 .wide .map { width: 100%; }
+.photo img { width: 100%; border: 1px solid var(--line); }

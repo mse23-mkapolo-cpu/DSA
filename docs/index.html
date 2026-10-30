@@ -95,7 +95,7 @@ footer p { margin: 4px 0; max-width: 75ch; }
 <div class="wrap">
   <header class="sign">
     <h1>Blantyre Route Finder</h1>
-    <p>Limbe to Blantyre town · 23 places · 37 roads · Dijkstra and minimum spanning tree</p>
+    <p>Limbe Market to Blantyre Market · 22 places · 32 roads · Dijkstra and minimum spanning tree</p>
   </header>
 
   <div class="grid">
@@ -123,7 +123,7 @@ footer p { margin: 4px 0; max-width: 75ch; }
 
       <section class="panel" id="view-mst" hidden>
         <div class="controls">
-          <label for="algo">Algorithm<select id="algo"><option value="kruskal">Kruskal</option><option value="prim">Prim (from Blantyre CBD)</option></select></label>
+          <label for="algo">Algorithm<select id="algo"><option value="kruskal">Kruskal</option><option value="prim">Prim (from Limbe Market)</option></select></label>
         </div>
         <div class="result" id="mst-result"></div>
         <div class="tablebox"><table id="mst-table"></table></div>
@@ -138,7 +138,7 @@ footer p { margin: 4px 0; max-width: 75ch; }
   </div>
 
   <footer>
-    <p>Distances are approximate road distances in kilometres, rounded to the nearest 100 m for the assignment. Positions are approximate (Blantyre town in the west, Limbe in the east), so the map is schematic.</p>
+    <p>Places and distances come from our hand-drawn graph of Blantyre city, from Limbe Market (left) to Blantyre Market (right). Distances are approximate road distances in kilometres. The layout follows the drawing, not an exact map.</p>
     <p>This page runs the same algorithms as the C++ program in the repository (src/graph.hpp), written in JavaScript so it works in any browser.</p>
   </footer>
 </div>
@@ -148,72 +148,66 @@ footer p { margin: 4px 0; max-width: 75ch; }
 // Shared by the web demo (index.html) and the PDF report.
 // Mirrors src/graph.hpp and data/malawi_roads.csv.
 
-// Schematic positions [x, y] of places in Blantyre city (Blantyre town in the
-// west, Limbe in the east, north at the top) and the side for the label.
+// Positions [x, y] of the places, copied from the group's hand-drawn graph
+// (Limbe Market on the left, Blantyre Market on the right), and the label side.
 const TOWNS = {
-  "Kameza":         [90,   40, "n"],
-  "Chilomoni":      [60,  170, "w"],
-  "Nyambadwe":      [250,  70, "n"],
-  "Ndirande":       [430,  40, "n"],
-  "Machinjiri":     [820,  50, "n"],
-  "Blantyre CBD":   [200, 230, "w"],
-  "Namiwawa":       [330, 160, "e"],
-  "Makata":         [530, 140, "e"],
-  "Ginnery Corner": [440, 250, "n"],
-  "QECH":           [320, 300, "s"],
-  "Mandala":        [230, 330, "w"],
-  "Sunnyside":      [110, 300, "w"],
-  "Chichiri":       [450, 360, "e"],
-  "Manja":          [20,  320, "w"],
-  "Zingwangwa":     [60,  450, "w"],
-  "Soche":          [180, 430, "s"],
-  "Naperi":         [300, 460, "s"],
-  "Chitawira":      [440, 480, "s"],
-  "Kanjedza":       [650, 250, "n"],
-  "Chinyonga":      [640, 420, "s"],
-  "Mpingwe":        [790, 390, "s"],
-  "Limbe":          [800, 250, "e"],
-  "Bangwe":         [930, 330, "e"],
+  "Limbe Market": [52, 178, "w"],
+  "Limbe Health Centre": [204, 83, "n"],
+  "Liquid Lounge Roundabout": [165, 178, "s"],
+  "MASM": [192, 260, "e"],
+  "Yanakis Roundabout": [155, 348, "w"],
+  "Reunion Insurance Roundabout": [265, 482, "s"],
+  "Independence Arch": [433, 456, "s"],
+  "Puma Energy Kanjedza": [298, 176, "s"],
+  "Automotive Products Limited": [395, 176, "n"],
+  "Chichiri Shopping Mall": [548, 444, "n"],
+  "St Columba": [534, 10, "n"],
+  "Kamba Pork Market": [580, 180, "n"],
+  "Stereo Night Club": [720, 178, "n"],
+  "Rosewood Mall": [830, 288, "s"],
+  "Red Cross Malawi": [690, 424, "s"],
+  "Castel": [630, 514, "s"],
+  "HHI": [738, 554, "s"],
+  "Blantyre Clock Tower": [832, 494, "e"],
+  "Mandala": [806, 365, "s"],
+  "PA Nandos": [919, 414, "e"],
+  "CI Primary School": [901, 234, "n"],
+  "Blantyre Market": [968, 320, "e"],
 };
 
 // Road distances in metres (same as data/blantyre_roads.csv).
-const ROADS_CSV = `Blantyre CBD,Mandala,1500
-Blantyre CBD,Chilomoni,2500
-Blantyre CBD,Nyambadwe,1800
-Blantyre CBD,Sunnyside,1300
-Blantyre CBD,Namiwawa,2000
-Blantyre CBD,QECH,2200
-Chilomoni,Kameza,2000
-Kameza,Nyambadwe,2400
-Chilomoni,Manja,2600
-Manja,Zingwangwa,2300
-Zingwangwa,Soche,1600
-Sunnyside,Soche,1800
-Soche,Naperi,1500
-Naperi,Chitawira,1700
-Mandala,QECH,1000
-Mandala,Naperi,2000
-QECH,Chichiri,1200
-QECH,Ginnery Corner,1500
-Namiwawa,Ginnery Corner,1600
-Nyambadwe,Ndirande,2500
-Namiwawa,Ndirande,2200
-Ndirande,Makata,2000
-Ginnery Corner,Makata,1400
-Ginnery Corner,Chichiri,1300
-Chichiri,Chitawira,1400
-Ginnery Corner,Kanjedza,3000
-Makata,Kanjedza,2800
-Chichiri,Chinyonga,3200
-Chitawira,Chinyonga,3400
-Kanjedza,Chinyonga,1500
-Kanjedza,Limbe,2500
-Chinyonga,Mpingwe,1800
-Mpingwe,Limbe,1200
-Limbe,Bangwe,2800
-Mpingwe,Bangwe,2500
-Limbe,Machinjiri,3500
-Ndirande,Machinjiri,4500`;
+const ROADS_CSV = `Limbe Market,Limbe Health Centre,450
+Limbe Market,Liquid Lounge Roundabout,700
+Limbe Market,Yanakis Roundabout,1200
+Limbe Health Centre,Liquid Lounge Roundabout,350
+Limbe Health Centre,St Columba,3200
+Liquid Lounge Roundabout,MASM,550
+Liquid Lounge Roundabout,Puma Energy Kanjedza,1000
+MASM,Yanakis Roundabout,1000
+Yanakis Roundabout,Reunion Insurance Roundabout,1100
+Reunion Insurance Roundabout,Independence Arch,1000
+Puma Energy Kanjedza,Automotive Products Limited,1600
+Puma Energy Kanjedza,Independence Arch,2900
+Automotive Products Limited,St Columba,850
+Automotive Products Limited,Kamba Pork Market,2500
+Automotive Products Limited,Chichiri Shopping Mall,1500
+Independence Arch,Chichiri Shopping Mall,2900
+St Columba,Stereo Night Club,3100
+Kamba Pork Market,Stereo Night Club,300
+Kamba Pork Market,Red Cross Malawi,1200
+Stereo Night Club,Rosewood Mall,700
+Rosewood Mall,Red Cross Malawi,1400
+Rosewood Mall,CI Primary School,1600
+CI Primary School,Blantyre Market,300
+Chichiri Shopping Mall,Red Cross Malawi,2300
+Chichiri Shopping Mall,Castel,1900
+Castel,HHI,1400
+HHI,Blantyre Clock Tower,2500
+Red Cross Malawi,Mandala,550
+Red Cross Malawi,Blantyre Clock Tower,3400
+Mandala,Blantyre Market,210
+Blantyre Clock Tower,PA Nandos,1200
+PA Nandos,Blantyre Market,1200`;
 
 function parseGraph(csv) {
   const names = [], index = new Map(), adj = [], edges = [];
@@ -329,12 +323,17 @@ function prim(g, start = 0) {
 
 // Draw the network as an SVG string.
 // opts: { path: [ids], mst: [edges], scale, showWeights, cls: extra class }
-// Metres to a km string with one decimal, e.g. 1500 -> "1.5".
-function km(m) { return m === Infinity ? "∞" : (m / 1000).toFixed(1); }
+// Metres to a km string, e.g. 1500 -> "1.5".
+// Shows two decimals only when needed: 1000 -> "1.0", 450 -> "0.45".
+function km(m) {
+  if (m === Infinity) return "∞";
+  const s = (m / 1000).toFixed(2);
+  return s.endsWith("0") ? s.slice(0, -1) : s;
+}
 
 function drawMap(g, opts = {}) {
-  const X = (x) => x + 110, Y = (y) => y + 36;
-  const W = 1160, H = 600;
+  const X = (x) => x + 150, Y = (y) => y + 40;
+  const W = 1260, H = 640;
   const pos = (id) => { const t = TOWNS[g.names[id]]; return [X(t[0]), Y(t[1])]; };
   const key = (u, v) => (u < v ? `${u}-${v}` : `${v}-${u}`);
   const onPath = new Set();
@@ -342,8 +341,8 @@ function drawMap(g, opts = {}) {
   const onMst = new Set((opts.mst || []).map((e) => key(e.u, e.v)));
   const pathNodes = new Set(opts.path || []);
   let s = `<svg class="map ${opts.cls || ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Graph of the Blantyre city road network">`;
-  s += `<text class="lake-label" x="${X(110)}" y="${Y(545)}">Blantyre side</text>`;
-  s += `<text class="lake-label" x="${X(760)}" y="${Y(545)}">Limbe side</text>`;
+  s += `<text class="lake-label" x="${X(20)}" y="${Y(580)}">Limbe side</text>`;
+  s += `<text class="lake-label" x="${X(820)}" y="${Y(580)}">Blantyre side</text>`;
   for (const e of g.edges) {
     const [x1, y1] = pos(e.u), [x2, y2] = pos(e.v);
     const kk = key(e.u, e.v);
@@ -367,7 +366,17 @@ function drawMap(g, opts = {}) {
     const anchor = side === "w" ? "end" : side === "e" ? "start" : "middle";
     const cls = opts.path && pathNodes.has(id) ? "town on-path" : "town";
     s += `<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/>`;
-    s += `<text class="town-label${pathNodes.has(id) ? " on-path" : ""}" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${name}</text>`;
+    // Long names go on two lines, split at the space nearest the middle.
+    let lines = [name];
+    if (name.length > 12 && name.includes(" ")) {
+      const mid = name.length / 2;
+      let best = -1;
+      for (let i = 0; i < name.length; i++) if (name[i] === " " && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
+      lines = [name.slice(0, best), name.slice(best + 1)];
+    }
+    const lh = 19, y0 = side === "n" ? ly - lh * (lines.length - 1) : side === "s" ? ly : ly - (lh * (lines.length - 1)) / 2;
+    s += `<text class="town-label${pathNodes.has(id) ? " on-path" : ""}" x="${lx.toFixed(1)}" y="${y0.toFixed(1)}" text-anchor="${anchor}">` +
+         lines.map((t, i) => `<tspan x="${lx.toFixed(1)}" dy="${i ? lh : 0}">${t}</tspan>`).join("") + `</text>`;
   });
   return s + "</svg>";
 }
@@ -380,7 +389,7 @@ const G = parseGraph(ROADS_CSV);
 const $ = (id) => document.getElementById(id);
 const sorted = [...G.names].sort();
 for (const sel of [$("from"), $("to")]) sel.innerHTML = sorted.map((n) => `<option>${n}</option>`).join("");
-$("from").value = "Blantyre CBD"; $("to").value = "Limbe";
+$("from").value = "Limbe Market"; $("to").value = "Blantyre Market";
 
 let view = "route";
 const fmt = km;
@@ -411,7 +420,7 @@ function showRoute() {
 
 function showMst() {
   const algo = $("algo").value;
-  const m = algo === "prim" ? prim(G, G.index.get("Blantyre CBD")) : kruskal(G);
+  const m = algo === "prim" ? prim(G, G.index.get("Limbe Market")) : kruskal(G);
   $("map").innerHTML = drawMap(G, { mst: m.edges });
   $("mst-result").innerHTML = `<div class="km">${km(m.total)}<small>km</small></div>
     <p class="sub">${m.edges.length} roads connect all ${G.names.length} places. The other ${G.edges.length - m.edges.length} roads (dashed) are not needed to keep every place connected.</p>`;
@@ -451,28 +460,28 @@ function runTests() {
   const island = parseGraph("Limbe,Bangwe,2800\nChileka,Lunzu,9000");
   const K = kruskal(G);
   const cases = [
-    ["T01", "Place and road count", "blantyre_roads.csv", "23 places, 37 roads", () => `${G.names.length} places, ${G.edges.length} roads`],
+    ["T01", "Place and road count", "blantyre_roads.csv", "22 places, 32 roads", () => `${G.names.length} places, ${G.edges.length} roads`],
     ["T02", "Same start and end", "Mandala → Mandala", "0.0 km: Mandala", () => route(G, "Mandala", "Mandala")],
-    ["T03", "Direct neighbours", "Blantyre CBD → Mandala", "1.5 km: Blantyre CBD > Mandala", () => route(G, "Blantyre CBD", "Mandala")],
-    ["T04", "Blantyre town to Limbe", "Blantyre CBD → Limbe", "9.1 km: Blantyre CBD > Namiwawa > Ginnery Corner > Kanjedza > Limbe", () => route(G, "Blantyre CBD", "Limbe")],
-    ["T05", "Route through residential areas", "Soche → Chichiri", "4.6 km: Soche > Naperi > Chitawira > Chichiri", () => route(G, "Soche", "Chichiri")],
-    ["T06", "Far west to far east", "Kameza → Bangwe", "15.0 km: Kameza > Nyambadwe > Ndirande > Makata > Kanjedza > Limbe > Bangwe", () => route(G, "Kameza", "Bangwe")],
-    ["T07", "Symmetric (undirected)", "Bangwe → Kameza", "15.0 km", () => route(G, "Bangwe", "Kameza").slice(0, 7)],
-    ["T08", "West to north-east", "Manja → Machinjiri", "13.8 km: Manja > Chilomoni > Blantyre CBD > Namiwawa > Ndirande > Machinjiri", () => route(G, "Manja", "Machinjiri")],
-    ["T09", "South-west to Limbe side", "Zingwangwa → Mpingwe", "10.0 km: Zingwangwa > Soche > Naperi > Chitawira > Chinyonga > Mpingwe", () => route(G, "Zingwangwa", "Mpingwe")],
-    ["T10", "Agrees with Floyd–Warshall", "all 529 pairs", "0 mismatches", floydMismatches],
-    ["T11", "Unknown place", "Blantyre CBD → Lilongwe", "error: Unknown place: Lilongwe", () => err(() => route(G, "Blantyre CBD", "Lilongwe"))],
-    ["T12", "Names are case sensitive", "limbe → Mandala", "error: Unknown place: limbe", () => err(() => route(G, "limbe", "Mandala"))],
+    ["T03", "Direct neighbours", "Mandala → Blantyre Market", "0.21 km: Mandala > Blantyre Market", () => route(G, "Mandala", "Blantyre Market")],
+    ["T04", "Limbe Market to Blantyre Market", "Limbe Market → Blantyre Market", "7.76 km: Limbe Market > Liquid Lounge Roundabout > Puma Energy Kanjedza > Automotive Products Limited > Kamba Pork Market > Red Cross Malawi > Mandala > Blantyre Market", () => route(G, "Limbe Market", "Blantyre Market")],
+    ["T05", "Limbe Market to Chichiri", "Limbe Market → Chichiri Shopping Mall", "4.8 km: Limbe Market > Liquid Lounge Roundabout > Puma Energy Kanjedza > Automotive Products Limited > Chichiri Shopping Mall", () => route(G, "Limbe Market", "Chichiri Shopping Mall")],
+    ["T06", "Southern route", "Yanakis Roundabout → HHI", "8.3 km: Yanakis Roundabout > Reunion Insurance Roundabout > Independence Arch > Chichiri Shopping Mall > Castel > HHI", () => route(G, "Yanakis Roundabout", "HHI")],
+    ["T07", "Symmetric (undirected)", "Blantyre Market → Limbe Market", "7.76 km", () => route(G, "Blantyre Market", "Limbe Market").slice(0, 7)],
+    ["T08", "Northern start", "St Columba → Mandala", "5.1 km: St Columba > Automotive Products Limited > Kamba Pork Market > Red Cross Malawi > Mandala", () => route(G, "St Columba", "Mandala")],
+    ["T09", "South to north-east", "Reunion Insurance Roundabout → Stereo Night Club", "7.7 km: Reunion Insurance Roundabout > Independence Arch > Chichiri Shopping Mall > Red Cross Malawi > Kamba Pork Market > Stereo Night Club", () => route(G, "Reunion Insurance Roundabout", "Stereo Night Club")],
+    ["T10", "Agrees with Floyd–Warshall", "all 484 pairs", "0 mismatches", floydMismatches],
+    ["T11", "Unknown place", "Limbe Market → Lilongwe", "error: Unknown place: Lilongwe", () => err(() => route(G, "Limbe Market", "Lilongwe"))],
+    ["T12", "Names are case sensitive", "limbe market → Mandala", "error: Unknown place: limbe market", () => err(() => route(G, "limbe market", "Mandala"))],
     ["T13", "Negative distance rejected", "A,B,-500", "error: Negative distance on road A - B: Dijkstra needs non-negative weights", () => err(() => parseGraph("A,B,-500"))],
-    ["T14", "Distance not in whole metres", "Limbe,Bangwe,2.8km", "error: Line 1: bad distance '2.8km'", () => err(() => parseGraph("Limbe,Bangwe,2.8km"))],
-    ["T15", "Wrong separator", "Limbe;Bangwe;2800", "error: Line 1: expected place_a,place_b,metres", () => err(() => parseGraph("Limbe;Bangwe;2800"))],
+    ["T14", "Distance not in whole metres", "Mandala,Blantyre Market,0.21km", "error: Line 1: bad distance '0.21km'", () => err(() => parseGraph("Mandala,Blantyre Market,0.21km"))],
+    ["T15", "Wrong separator", "Mandala;Blantyre Market;210", "error: Line 1: expected place_a,place_b,metres", () => err(() => parseGraph("Mandala;Blantyre Market;210"))],
     ["T17", "Unreachable place", "Limbe → Chileka", "unreachable", () => route(island, "Limbe", "Chileka")],
     ["T18", "Disconnected graph gives a forest", "2 separate roads", "2 edges, total 11.8 km, spanning=false", () => { const f = kruskal(island); return `${f.edges.length} edges, total ${km(f.total)} km, spanning=${f.spanning}`; }],
     ["T19", "Zero-length road allowed", "A-B 0, B-C 400, A-C 900", "0.4 km: A > B > C", () => route(parseGraph("A,B,0\nB,C,400\nA,C,900"), "A", "C")],
     ["T20", "Parallel roads: shorter used", "A-B 1000 and A-B 300", "0.3 km: A > B", () => route(parseGraph("A,B,1000\nA,B,300"), "A", "B")],
-    ["T21", "Kruskal MST size", "Blantyre graph", "22 edges, spanning=true", () => `${K.edges.length} edges, spanning=${K.spanning}`],
-    ["T22", "Kruskal MST total", "Blantyre graph", "39.3 km", () => `${km(K.total)} km`],
-    ["T24", "Prim from every place agrees", "23 start places", "0 mismatches", () => G.names.filter((_, s) => prim(G, s).total !== K.total).length + " mismatches"],
+    ["T21", "Kruskal MST size", "Blantyre graph", "21 edges, spanning=true", () => `${K.edges.length} edges, spanning=${K.spanning}`],
+    ["T22", "Kruskal MST total", "Blantyre graph", "20.66 km", () => `${km(K.total)} km`],
+    ["T24", "Prim from every place agrees", "22 start places", "0 mismatches", () => G.names.filter((_, s) => prim(G, s).total !== K.total).length + " mismatches"],
   ];
   let pass = 0, rows = "";
   for (const [id, name, input, expected, f] of cases) {

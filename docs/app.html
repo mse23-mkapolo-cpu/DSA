@@ -87,7 +87,7 @@ footer p { margin: 4px 0; max-width: 75ch; }
 <div class="wrap">
   <header class="sign">
     <h1>Blantyre Route Finder</h1>
-    <p>Limbe to Blantyre town · 23 places · 37 roads · Dijkstra and minimum spanning tree</p>
+    <p>Limbe Market to Blantyre Market · 22 places · 32 roads · Dijkstra and minimum spanning tree</p>
   </header>
 
   <div class="grid">
@@ -115,7 +115,7 @@ footer p { margin: 4px 0; max-width: 75ch; }
 
       <section class="panel" id="view-mst" hidden>
         <div class="controls">
-          <label for="algo">Algorithm<select id="algo"><option value="kruskal">Kruskal</option><option value="prim">Prim (from Blantyre CBD)</option></select></label>
+          <label for="algo">Algorithm<select id="algo"><option value="kruskal">Kruskal</option><option value="prim">Prim (from Limbe Market)</option></select></label>
         </div>
         <div class="result" id="mst-result"></div>
         <div class="tablebox"><table id="mst-table"></table></div>
@@ -130,7 +130,7 @@ footer p { margin: 4px 0; max-width: 75ch; }
   </div>
 
   <footer>
-    <p>Distances are approximate road distances in kilometres, rounded to the nearest 100 m for the assignment. Positions are approximate (Blantyre town in the west, Limbe in the east), so the map is schematic.</p>
+    <p>Places and distances come from our hand-drawn graph of Blantyre city, from Limbe Market (left) to Blantyre Market (right). Distances are approximate road distances in kilometres. The layout follows the drawing, not an exact map.</p>
     <p>This page runs the same algorithms as the C++ program in the repository (src/graph.hpp), written in JavaScript so it works in any browser.</p>
   </footer>
 </div>
@@ -143,7 +143,7 @@ const G = parseGraph(ROADS_CSV);
 const $ = (id) => document.getElementById(id);
 const sorted = [...G.names].sort();
 for (const sel of [$("from"), $("to")]) sel.innerHTML = sorted.map((n) => `<option>${n}</option>`).join("");
-$("from").value = "Blantyre CBD"; $("to").value = "Limbe";
+$("from").value = "Limbe Market"; $("to").value = "Blantyre Market";
 
 let view = "route";
 const fmt = km;
@@ -174,7 +174,7 @@ function showRoute() {
 
 function showMst() {
   const algo = $("algo").value;
-  const m = algo === "prim" ? prim(G, G.index.get("Blantyre CBD")) : kruskal(G);
+  const m = algo === "prim" ? prim(G, G.index.get("Limbe Market")) : kruskal(G);
   $("map").innerHTML = drawMap(G, { mst: m.edges });
   $("mst-result").innerHTML = `<div class="km">${km(m.total)}<small>km</small></div>
     <p class="sub">${m.edges.length} roads connect all ${G.names.length} places. The other ${G.edges.length - m.edges.length} roads (dashed) are not needed to keep every place connected.</p>`;
@@ -214,28 +214,28 @@ function runTests() {
   const island = parseGraph("Limbe,Bangwe,2800\nChileka,Lunzu,9000");
   const K = kruskal(G);
   const cases = [
-    ["T01", "Place and road count", "blantyre_roads.csv", "23 places, 37 roads", () => `${G.names.length} places, ${G.edges.length} roads`],
+    ["T01", "Place and road count", "blantyre_roads.csv", "22 places, 32 roads", () => `${G.names.length} places, ${G.edges.length} roads`],
     ["T02", "Same start and end", "Mandala → Mandala", "0.0 km: Mandala", () => route(G, "Mandala", "Mandala")],
-    ["T03", "Direct neighbours", "Blantyre CBD → Mandala", "1.5 km: Blantyre CBD > Mandala", () => route(G, "Blantyre CBD", "Mandala")],
-    ["T04", "Blantyre town to Limbe", "Blantyre CBD → Limbe", "9.1 km: Blantyre CBD > Namiwawa > Ginnery Corner > Kanjedza > Limbe", () => route(G, "Blantyre CBD", "Limbe")],
-    ["T05", "Route through residential areas", "Soche → Chichiri", "4.6 km: Soche > Naperi > Chitawira > Chichiri", () => route(G, "Soche", "Chichiri")],
-    ["T06", "Far west to far east", "Kameza → Bangwe", "15.0 km: Kameza > Nyambadwe > Ndirande > Makata > Kanjedza > Limbe > Bangwe", () => route(G, "Kameza", "Bangwe")],
-    ["T07", "Symmetric (undirected)", "Bangwe → Kameza", "15.0 km", () => route(G, "Bangwe", "Kameza").slice(0, 7)],
-    ["T08", "West to north-east", "Manja → Machinjiri", "13.8 km: Manja > Chilomoni > Blantyre CBD > Namiwawa > Ndirande > Machinjiri", () => route(G, "Manja", "Machinjiri")],
-    ["T09", "South-west to Limbe side", "Zingwangwa → Mpingwe", "10.0 km: Zingwangwa > Soche > Naperi > Chitawira > Chinyonga > Mpingwe", () => route(G, "Zingwangwa", "Mpingwe")],
-    ["T10", "Agrees with Floyd–Warshall", "all 529 pairs", "0 mismatches", floydMismatches],
-    ["T11", "Unknown place", "Blantyre CBD → Lilongwe", "error: Unknown place: Lilongwe", () => err(() => route(G, "Blantyre CBD", "Lilongwe"))],
-    ["T12", "Names are case sensitive", "limbe → Mandala", "error: Unknown place: limbe", () => err(() => route(G, "limbe", "Mandala"))],
+    ["T03", "Direct neighbours", "Mandala → Blantyre Market", "0.21 km: Mandala > Blantyre Market", () => route(G, "Mandala", "Blantyre Market")],
+    ["T04", "Limbe Market to Blantyre Market", "Limbe Market → Blantyre Market", "7.76 km: Limbe Market > Liquid Lounge Roundabout > Puma Energy Kanjedza > Automotive Products Limited > Kamba Pork Market > Red Cross Malawi > Mandala > Blantyre Market", () => route(G, "Limbe Market", "Blantyre Market")],
+    ["T05", "Limbe Market to Chichiri", "Limbe Market → Chichiri Shopping Mall", "4.8 km: Limbe Market > Liquid Lounge Roundabout > Puma Energy Kanjedza > Automotive Products Limited > Chichiri Shopping Mall", () => route(G, "Limbe Market", "Chichiri Shopping Mall")],
+    ["T06", "Southern route", "Yanakis Roundabout → HHI", "8.3 km: Yanakis Roundabout > Reunion Insurance Roundabout > Independence Arch > Chichiri Shopping Mall > Castel > HHI", () => route(G, "Yanakis Roundabout", "HHI")],
+    ["T07", "Symmetric (undirected)", "Blantyre Market → Limbe Market", "7.76 km", () => route(G, "Blantyre Market", "Limbe Market").slice(0, 7)],
+    ["T08", "Northern start", "St Columba → Mandala", "5.1 km: St Columba > Automotive Products Limited > Kamba Pork Market > Red Cross Malawi > Mandala", () => route(G, "St Columba", "Mandala")],
+    ["T09", "South to north-east", "Reunion Insurance Roundabout → Stereo Night Club", "7.7 km: Reunion Insurance Roundabout > Independence Arch > Chichiri Shopping Mall > Red Cross Malawi > Kamba Pork Market > Stereo Night Club", () => route(G, "Reunion Insurance Roundabout", "Stereo Night Club")],
+    ["T10", "Agrees with Floyd–Warshall", "all 484 pairs", "0 mismatches", floydMismatches],
+    ["T11", "Unknown place", "Limbe Market → Lilongwe", "error: Unknown place: Lilongwe", () => err(() => route(G, "Limbe Market", "Lilongwe"))],
+    ["T12", "Names are case sensitive", "limbe market → Mandala", "error: Unknown place: limbe market", () => err(() => route(G, "limbe market", "Mandala"))],
     ["T13", "Negative distance rejected", "A,B,-500", "error: Negative distance on road A - B: Dijkstra needs non-negative weights", () => err(() => parseGraph("A,B,-500"))],
-    ["T14", "Distance not in whole metres", "Limbe,Bangwe,2.8km", "error: Line 1: bad distance '2.8km'", () => err(() => parseGraph("Limbe,Bangwe,2.8km"))],
-    ["T15", "Wrong separator", "Limbe;Bangwe;2800", "error: Line 1: expected place_a,place_b,metres", () => err(() => parseGraph("Limbe;Bangwe;2800"))],
+    ["T14", "Distance not in whole metres", "Mandala,Blantyre Market,0.21km", "error: Line 1: bad distance '0.21km'", () => err(() => parseGraph("Mandala,Blantyre Market,0.21km"))],
+    ["T15", "Wrong separator", "Mandala;Blantyre Market;210", "error: Line 1: expected place_a,place_b,metres", () => err(() => parseGraph("Mandala;Blantyre Market;210"))],
     ["T17", "Unreachable place", "Limbe → Chileka", "unreachable", () => route(island, "Limbe", "Chileka")],
     ["T18", "Disconnected graph gives a forest", "2 separate roads", "2 edges, total 11.8 km, spanning=false", () => { const f = kruskal(island); return `${f.edges.length} edges, total ${km(f.total)} km, spanning=${f.spanning}`; }],
     ["T19", "Zero-length road allowed", "A-B 0, B-C 400, A-C 900", "0.4 km: A > B > C", () => route(parseGraph("A,B,0\nB,C,400\nA,C,900"), "A", "C")],
     ["T20", "Parallel roads: shorter used", "A-B 1000 and A-B 300", "0.3 km: A > B", () => route(parseGraph("A,B,1000\nA,B,300"), "A", "B")],
-    ["T21", "Kruskal MST size", "Blantyre graph", "22 edges, spanning=true", () => `${K.edges.length} edges, spanning=${K.spanning}`],
-    ["T22", "Kruskal MST total", "Blantyre graph", "39.3 km", () => `${km(K.total)} km`],
-    ["T24", "Prim from every place agrees", "23 start places", "0 mismatches", () => G.names.filter((_, s) => prim(G, s).total !== K.total).length + " mismatches"],
+    ["T21", "Kruskal MST size", "Blantyre graph", "21 edges, spanning=true", () => `${K.edges.length} edges, spanning=${K.spanning}`],
+    ["T22", "Kruskal MST total", "Blantyre graph", "20.66 km", () => `${km(K.total)} km`],
+    ["T24", "Prim from every place agrees", "22 start places", "0 mismatches", () => G.names.filter((_, s) => prim(G, s).total !== K.total).length + " mismatches"],
   ];
   let pass = 0, rows = "";
   for (const [id, name, input, expected, f] of cases) {

@@ -2,72 +2,66 @@
 // Shared by the web demo (index.html) and the PDF report.
 // Mirrors src/graph.hpp and data/malawi_roads.csv.
 
-// Schematic positions [x, y] of places in Blantyre city (Blantyre town in the
-// west, Limbe in the east, north at the top) and the side for the label.
+// Positions [x, y] of the places, copied from the group's hand-drawn graph
+// (Limbe Market on the left, Blantyre Market on the right), and the label side.
 const TOWNS = {
-  "Kameza":         [90,   40, "n"],
-  "Chilomoni":      [60,  170, "w"],
-  "Nyambadwe":      [250,  70, "n"],
-  "Ndirande":       [430,  40, "n"],
-  "Machinjiri":     [820,  50, "n"],
-  "Blantyre CBD":   [200, 230, "w"],
-  "Namiwawa":       [330, 160, "e"],
-  "Makata":         [530, 140, "e"],
-  "Ginnery Corner": [440, 250, "n"],
-  "QECH":           [320, 300, "s"],
-  "Mandala":        [230, 330, "w"],
-  "Sunnyside":      [110, 300, "w"],
-  "Chichiri":       [450, 360, "e"],
-  "Manja":          [20,  320, "w"],
-  "Zingwangwa":     [60,  450, "w"],
-  "Soche":          [180, 430, "s"],
-  "Naperi":         [300, 460, "s"],
-  "Chitawira":      [440, 480, "s"],
-  "Kanjedza":       [650, 250, "n"],
-  "Chinyonga":      [640, 420, "s"],
-  "Mpingwe":        [790, 390, "s"],
-  "Limbe":          [800, 250, "e"],
-  "Bangwe":         [930, 330, "e"],
+  "Limbe Market": [52, 178, "w"],
+  "Limbe Health Centre": [204, 83, "n"],
+  "Liquid Lounge Roundabout": [165, 178, "s"],
+  "MASM": [192, 260, "e"],
+  "Yanakis Roundabout": [155, 348, "w"],
+  "Reunion Insurance Roundabout": [265, 482, "s"],
+  "Independence Arch": [433, 456, "s"],
+  "Puma Energy Kanjedza": [298, 176, "s"],
+  "Automotive Products Limited": [395, 176, "n"],
+  "Chichiri Shopping Mall": [548, 444, "n"],
+  "St Columba": [534, 10, "n"],
+  "Kamba Pork Market": [580, 180, "n"],
+  "Stereo Night Club": [720, 178, "n"],
+  "Rosewood Mall": [830, 288, "s"],
+  "Red Cross Malawi": [690, 424, "s"],
+  "Castel": [630, 514, "s"],
+  "HHI": [738, 554, "s"],
+  "Blantyre Clock Tower": [832, 494, "e"],
+  "Mandala": [806, 365, "s"],
+  "PA Nandos": [919, 414, "e"],
+  "CI Primary School": [901, 234, "n"],
+  "Blantyre Market": [968, 320, "e"],
 };
 
 // Road distances in metres (same as data/blantyre_roads.csv).
-const ROADS_CSV = `Blantyre CBD,Mandala,1500
-Blantyre CBD,Chilomoni,2500
-Blantyre CBD,Nyambadwe,1800
-Blantyre CBD,Sunnyside,1300
-Blantyre CBD,Namiwawa,2000
-Blantyre CBD,QECH,2200
-Chilomoni,Kameza,2000
-Kameza,Nyambadwe,2400
-Chilomoni,Manja,2600
-Manja,Zingwangwa,2300
-Zingwangwa,Soche,1600
-Sunnyside,Soche,1800
-Soche,Naperi,1500
-Naperi,Chitawira,1700
-Mandala,QECH,1000
-Mandala,Naperi,2000
-QECH,Chichiri,1200
-QECH,Ginnery Corner,1500
-Namiwawa,Ginnery Corner,1600
-Nyambadwe,Ndirande,2500
-Namiwawa,Ndirande,2200
-Ndirande,Makata,2000
-Ginnery Corner,Makata,1400
-Ginnery Corner,Chichiri,1300
-Chichiri,Chitawira,1400
-Ginnery Corner,Kanjedza,3000
-Makata,Kanjedza,2800
-Chichiri,Chinyonga,3200
-Chitawira,Chinyonga,3400
-Kanjedza,Chinyonga,1500
-Kanjedza,Limbe,2500
-Chinyonga,Mpingwe,1800
-Mpingwe,Limbe,1200
-Limbe,Bangwe,2800
-Mpingwe,Bangwe,2500
-Limbe,Machinjiri,3500
-Ndirande,Machinjiri,4500`;
+const ROADS_CSV = `Limbe Market,Limbe Health Centre,450
+Limbe Market,Liquid Lounge Roundabout,700
+Limbe Market,Yanakis Roundabout,1200
+Limbe Health Centre,Liquid Lounge Roundabout,350
+Limbe Health Centre,St Columba,3200
+Liquid Lounge Roundabout,MASM,550
+Liquid Lounge Roundabout,Puma Energy Kanjedza,1000
+MASM,Yanakis Roundabout,1000
+Yanakis Roundabout,Reunion Insurance Roundabout,1100
+Reunion Insurance Roundabout,Independence Arch,1000
+Puma Energy Kanjedza,Automotive Products Limited,1600
+Puma Energy Kanjedza,Independence Arch,2900
+Automotive Products Limited,St Columba,850
+Automotive Products Limited,Kamba Pork Market,2500
+Automotive Products Limited,Chichiri Shopping Mall,1500
+Independence Arch,Chichiri Shopping Mall,2900
+St Columba,Stereo Night Club,3100
+Kamba Pork Market,Stereo Night Club,300
+Kamba Pork Market,Red Cross Malawi,1200
+Stereo Night Club,Rosewood Mall,700
+Rosewood Mall,Red Cross Malawi,1400
+Rosewood Mall,CI Primary School,1600
+CI Primary School,Blantyre Market,300
+Chichiri Shopping Mall,Red Cross Malawi,2300
+Chichiri Shopping Mall,Castel,1900
+Castel,HHI,1400
+HHI,Blantyre Clock Tower,2500
+Red Cross Malawi,Mandala,550
+Red Cross Malawi,Blantyre Clock Tower,3400
+Mandala,Blantyre Market,210
+Blantyre Clock Tower,PA Nandos,1200
+PA Nandos,Blantyre Market,1200`;
 
 function parseGraph(csv) {
   const names = [], index = new Map(), adj = [], edges = [];
@@ -183,12 +177,17 @@ function prim(g, start = 0) {
 
 // Draw the network as an SVG string.
 // opts: { path: [ids], mst: [edges], scale, showWeights, cls: extra class }
-// Metres to a km string with one decimal, e.g. 1500 -> "1.5".
-function km(m) { return m === Infinity ? "∞" : (m / 1000).toFixed(1); }
+// Metres to a km string, e.g. 1500 -> "1.5".
+// Shows two decimals only when needed: 1000 -> "1.0", 450 -> "0.45".
+function km(m) {
+  if (m === Infinity) return "∞";
+  const s = (m / 1000).toFixed(2);
+  return s.endsWith("0") ? s.slice(0, -1) : s;
+}
 
 function drawMap(g, opts = {}) {
-  const X = (x) => x + 110, Y = (y) => y + 36;
-  const W = 1160, H = 600;
+  const X = (x) => x + 150, Y = (y) => y + 40;
+  const W = 1260, H = 640;
   const pos = (id) => { const t = TOWNS[g.names[id]]; return [X(t[0]), Y(t[1])]; };
   const key = (u, v) => (u < v ? `${u}-${v}` : `${v}-${u}`);
   const onPath = new Set();
@@ -196,8 +195,8 @@ function drawMap(g, opts = {}) {
   const onMst = new Set((opts.mst || []).map((e) => key(e.u, e.v)));
   const pathNodes = new Set(opts.path || []);
   let s = `<svg class="map ${opts.cls || ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Graph of the Blantyre city road network">`;
-  s += `<text class="lake-label" x="${X(110)}" y="${Y(545)}">Blantyre side</text>`;
-  s += `<text class="lake-label" x="${X(760)}" y="${Y(545)}">Limbe side</text>`;
+  s += `<text class="lake-label" x="${X(20)}" y="${Y(580)}">Limbe side</text>`;
+  s += `<text class="lake-label" x="${X(820)}" y="${Y(580)}">Blantyre side</text>`;
   for (const e of g.edges) {
     const [x1, y1] = pos(e.u), [x2, y2] = pos(e.v);
     const kk = key(e.u, e.v);
@@ -221,7 +220,17 @@ function drawMap(g, opts = {}) {
     const anchor = side === "w" ? "end" : side === "e" ? "start" : "middle";
     const cls = opts.path && pathNodes.has(id) ? "town on-path" : "town";
     s += `<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/>`;
-    s += `<text class="town-label${pathNodes.has(id) ? " on-path" : ""}" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${name}</text>`;
+    // Long names go on two lines, split at the space nearest the middle.
+    let lines = [name];
+    if (name.length > 12 && name.includes(" ")) {
+      const mid = name.length / 2;
+      let best = -1;
+      for (let i = 0; i < name.length; i++) if (name[i] === " " && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
+      lines = [name.slice(0, best), name.slice(best + 1)];
+    }
+    const lh = 19, y0 = side === "n" ? ly - lh * (lines.length - 1) : side === "s" ? ly : ly - (lh * (lines.length - 1)) / 2;
+    s += `<text class="town-label${pathNodes.has(id) ? " on-path" : ""}" x="${lx.toFixed(1)}" y="${y0.toFixed(1)}" text-anchor="${anchor}">` +
+         lines.map((t, i) => `<tspan x="${lx.toFixed(1)}" dy="${i ? lh : 0}">${t}</tspan>`).join("") + `</text>`;
   });
   return s + "</svg>";
 }

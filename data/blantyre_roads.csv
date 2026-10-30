@@ -1,39 +1,34 @@
-# Blantyre city road network, Limbe to Blantyre town: place_a,place_b,distance_m
-# Distances are approximate road distances in metres (rounded to 100 m), undirected.
-Blantyre CBD,Mandala,1500
-Blantyre CBD,Chilomoni,2500
-Blantyre CBD,Nyambadwe,1800
-Blantyre CBD,Sunnyside,1300
-Blantyre CBD,Namiwawa,2000
-Blantyre CBD,QECH,2200
-Chilomoni,Kameza,2000
-Kameza,Nyambadwe,2400
-Chilomoni,Manja,2600
-Manja,Zingwangwa,2300
-Zingwangwa,Soche,1600
-Sunnyside,Soche,1800
-Soche,Naperi,1500
-Naperi,Chitawira,1700
-Mandala,QECH,1000
-Mandala,Naperi,2000
-QECH,Chichiri,1200
-QECH,Ginnery Corner,1500
-Namiwawa,Ginnery Corner,1600
-Nyambadwe,Ndirande,2500
-Namiwawa,Ndirande,2200
-Ndirande,Makata,2000
-Ginnery Corner,Makata,1400
-Ginnery Corner,Chichiri,1300
-Chichiri,Chitawira,1400
-Ginnery Corner,Kanjedza,3000
-Makata,Kanjedza,2800
-Chichiri,Chinyonga,3200
-Chitawira,Chinyonga,3400
-Kanjedza,Chinyonga,1500
-Kanjedza,Limbe,2500
-Chinyonga,Mpingwe,1800
-Mpingwe,Limbe,1200
-Limbe,Bangwe,2800
-Mpingwe,Bangwe,2500
-Limbe,Machinjiri,3500
-Ndirande,Machinjiri,4500
+# Blantyre city road network, Limbe Market to Blantyre Market: place_a,place_b,distance_m
+# Taken from the group's hand-drawn graph. Distances in metres, undirected.
+Limbe Market,Limbe Health Centre,450
+Limbe Market,Liquid Lounge Roundabout,700
+Limbe Market,Yanakis Roundabout,1200
+Limbe Health Centre,Liquid Lounge Roundabout,350
+Limbe Health Centre,St Columba,3200
+Liquid Lounge Roundabout,MASM,550
+Liquid Lounge Roundabout,Puma Energy Kanjedza,1000
+MASM,Yanakis Roundabout,1000
+Yanakis Roundabout,Reunion Insurance Roundabout,1100
+Reunion Insurance Roundabout,Independence Arch,1000
+Puma Energy Kanjedza,Automotive Products Limited,1600
+Puma Energy Kanjedza,Independence Arch,2900
+Automotive Products Limited,St Columba,850
+Automotive Products Limited,Kamba Pork Market,2500
+Automotive Products Limited,Chichiri Shopping Mall,1500
+Independence Arch,Chichiri Shopping Mall,2900
+St Columba,Stereo Night Club,3100
+Kamba Pork Market,Stereo Night Club,300
+Kamba Pork Market,Red Cross Malawi,1200
+Stereo Night Club,Rosewood Mall,700
+Rosewood Mall,Red Cross Malawi,1400
+Rosewood Mall,CI Primary School,1600
+CI Primary School,Blantyre Market,300
+Chichiri Shopping Mall,Red Cross Malawi,2300
+Chichiri Shopping Mall,Castel,1900
+Castel,HHI,1400
+HHI,Blantyre Clock Tower,2500
+Red Cross Malawi,Mandala,550
+Red Cross Malawi,Blantyre Clock Tower,3400
+Mandala,Blantyre Market,210
+Blantyre Clock Tower,PA Nandos,1200
+PA Nandos,Blantyre Market,1200

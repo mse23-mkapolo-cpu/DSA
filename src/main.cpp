@@ -16,12 +16,14 @@
 
 using namespace mw;
 
-// Metres to km with one decimal, e.g. 1500 -> "1.5".
+// Metres to km, two decimals only when needed: 1000 -> "1.0", 450 -> "0.45".
 static std::string km(long long m) {
     if (m >= INF) return "inf";
     std::ostringstream o;
-    o << std::fixed << std::setprecision(1) << m / 1000.0;
-    return o.str();
+    o << std::fixed << std::setprecision(2) << m / 1000.0;
+    std::string s = o.str();
+    if (s.back() == '0') s.pop_back();
+    return s;
 }
 
 static void printPath(const Graph& g, const std::string& from, const std::string& to, bool withTrace) {
@@ -63,7 +65,7 @@ static void printAll(const Graph& g, const std::string& from) {
     DijkstraResult r = dijkstra(g, g.id(from));
     std::cout << "Shortest distances from " << from << ":\n";
     for (int v = 0; v < g.size(); ++v) {
-        std::cout << "  " << std::left << std::setw(15) << g.name(v) << std::right << std::setw(6)
+        std::cout << "  " << std::left << std::setw(29) << g.name(v) << std::right << std::setw(6)
                   << km(r.dist[v]) << " km   via ";
         std::vector<int> p = buildPath(r, v);
         for (size_t i = 0; i < p.size(); ++i) std::cout << (i ? " > " : "") << g.name(p[i]);
@@ -78,7 +80,7 @@ static void printMst(const Graph& g, const std::string& algo) {
     else throw std::invalid_argument("MST algorithm must be prim or kruskal");
     std::cout << "Minimum spanning tree (" << algo << "), in the order edges were added:\n";
     for (const Edge& e : m.edges)
-        std::cout << "  " << std::left << std::setw(15) << g.name(e.u) << " - " << std::setw(15) << g.name(e.v)
+        std::cout << "  " << std::left << std::setw(29) << g.name(e.u) << " - " << std::setw(29) << g.name(e.v)
                   << std::right << std::setw(5) << km(e.w) << " km\n";
     std::cout << "Edges: " << m.edges.size() << ", total length: " << km(m.total) << " km"
               << (m.spanning ? "" : "  (graph is disconnected: this is a spanning forest)") << "\n";
