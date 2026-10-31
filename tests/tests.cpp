@@ -175,7 +175,7 @@ int main(int argc, char** argv) {
     MstResult k = kruskal(g), p = prim(g);
     check("T21 Kruskal MST size", "Blantyre graph", "21 edges, spanning=true",
           std::to_string(k.edges.size()) + " edges, spanning=" + (k.spanning ? "true" : "false"));
-    check("T22 Kruskal MST total", "Blantyre graph", "20.66 km", km(k.total));
+    check("T22 Kruskal MST total", "Blantyre graph", "21.96 km", km(k.total));
     check("T23 Prim gives the same total", "Blantyre graph, start at " + g.name(0), km(k.total), km(p.total));
     {
         int mismatch = 0;

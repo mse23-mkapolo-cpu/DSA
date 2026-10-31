@@ -34,12 +34,12 @@ const NUM = {
   "Red Cross Malawi": 15, Castel: 16, HHI: 17, "Blantyre Clock Tower": 18, Mandala: 19, "PA Nandos": 20,
   "CI Primary School": 21, "Blantyre Market": 22,
 };
-const AREA = (n) => (NUM[n] <= 8 && n !== "Independence Arch" ? "Limbe side" : NUM[n] <= 13 ? "Middle (Kanjedza–Chichiri)" : "Blantyre side");
+const AREA = (n) => (NUM[n] <= 8 && n !== "Independence Arch" ? "Limbe side" : NUM[n] <= 13 ? "Middle (Kanjedza to Chichiri)" : "Blantyre side");
 
 // ---------- Q1 tables
 const nodeRows = [...G.names.keys()].sort((a, b) => NUM[N(a)] - NUM[N(b)]).map((i) => `<tr><td class="num">${NUM[N(i)]}</td><td>${N(i)}</td><td>${AREA(N(i))}</td><td class="num">${deg[i]}</td>
-  <td>${G.adj[i].map(([v, w]) => `${N(v)} (${km(w)})`).join(", ")}</td></tr>`).join("");
-const edgeRows = G.edges.map((e, i) => `<tr><td class="num">e${i + 1}</td><td>${NUM[N(e.u)]} ${N(e.u)}</td><td>${NUM[N(e.v)]} ${N(e.v)}</td><td class="num">${km(e.w)}</td></tr>`);
+  <td>${G.adj[i].map(([v, w]) => `${N(v)} (${km(w)} km)`).join(", ")}</td></tr>`).join("");
+const edgeRows = G.edges.map((e, i) => `<tr><td class="num">E${i + 1}</td><td>${NUM[N(e.u)]} ${N(e.u)}</td><td>${NUM[N(e.v)]} ${N(e.v)}</td><td class="num">${km(e.w)}</td></tr>`);
 const half = Math.ceil(edgeRows.length / 2);
 const edgeTable = (rows) => `<table class="compact"><thead><tr><th>Edge</th><th>Place A</th><th>Place B</th><th>km</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
 const maxDeg = Math.max(...deg);
@@ -51,7 +51,7 @@ const shortest = G.edges.reduce((a, e) => (e.w < a.w ? e : a));
 const SRC = G.index.get("Limbe Market"), LIMBE = G.index.get("Blantyre Market");
 const full = M.dijkstra(G, SRC);
 const stepRows = full.steps.map((st, i) => {
-  const upd = st.relaxed.length ? st.relaxed.map(([v, o, n]) => `${N(v)}: ${km(o)} → <b>${km(n)}</b>`).join("<br>") : "none (no shorter road found)";
+  const upd = st.relaxed.length ? st.relaxed.map(([v, o, n]) => `${N(v)}: ${km(o)} → <b>${km(n)}</b>`).join("<br>") : "no change";
   const q = st.frontier.map(([d, v]) => `${N(v)} ${km(d)}`).join(", ");
   return `<tr><td class="num">${i + 1}</td><td><b>${N(st.settled)}</b></td><td class="num">${km(st.d)}</td><td>${upd}</td><td class="small">${q || "(empty)"}</td></tr>`;
 }).join("");
@@ -130,10 +130,21 @@ const src = (f) => esc(fs.readFileSync(path.join(ROOT, f), "utf8"));
 const dijkstraCode = esc(fs.readFileSync(path.join(ROOT, "src/graph.hpp"), "utf8").split("// ---------------------------------------------------------------- Dijkstra")[1].split("// ---------------------------------------------------------------- MST")[0].trim());
 const log2 = (x) => Math.round(E * Math.log2(x));
 
-const css = fs.readFileSync(path.join(__dirname, "report.css"), "utf8");
-const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Blantyre City Road Network – DSA Assignment</title>
-<style>${css}</style></head><body>
 
+// ---------- figures: inline SVG for the PDF, PNG for the Word file
+const FIGS = [];
+function fig(id, svg, caption, cls = "wide") {
+  FIGS.push({ id, svg });
+  return `<figure class="map-fig ${cls}" data-fig="${id}">${svg}<figcaption>${caption}</figcaption></figure>`;
+}
+const iterOf = (() => {
+  // which dry-run row first lowers the clock tower below the direct road
+  const m = DR.rows.match(/<td class="num">(\d+)<\/td><td>pop \(PA Nandos/);
+  return m ? m[1] : "?";
+})();
+
+const css = fs.readFileSync(path.join(__dirname, "report.css"), "utf8");
+const body = `
 <section class="cover">
   <p class="eyebrow">${COURSE} · 2026 Assignment</p>
   <h1>Shortest Routes and Minimum Spanning Tree on the Blantyre City Road Network, from Limbe Market to Blantyre Market</h1>
@@ -155,178 +166,215 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>
 <section>
 <h2>1. The graph: Blantyre city road network <span class="q">Q1 · 15 marks</span></h2>
 <p><b>Scenario.</b> The graph models the roads of Blantyre city between <b>Limbe Market</b> in the east of the city and <b>Blantyre Market</b> in Blantyre town. Each <b>vertex</b> is a well-known place along these roads: markets, roundabouts, shopping malls, landmarks and institutions such as Limbe Health Centre, Independence Arch, Chichiri Shopping Mall, Red Cross Malawi and the Blantyre Clock Tower. Each <b>edge</b> is a road that links two places directly, without passing through another place in the graph. The <b>weight</b> of an edge is the road distance between the two places in kilometres.</p>
-<p>The places and distances were chosen by the group and drawn by hand (section 2). The vertices are numbered 1 to 22 from Limbe Market (1) to Blantyre Market (22). There are three broad ways across the city: a northern route through Limbe Health Centre, St Columba and Stereo Night Club; a central route through Puma Energy Kanjedza, Automotive Products Limited and Kamba Pork Market; and a southern route through Yanakis Roundabout, Reunion Insurance Roundabout, Independence Arch and Chichiri Shopping Mall. Cross roads join the routes, so a traveller has many possible paths.</p>
-<p>The graph is <b>undirected</b> because the roads carry traffic in both directions, so the distance from A to B equals the distance from B to A. It is <b>weighted</b> because the roads have different lengths, and it is <b>simple</b> (no self loops, at most one road between two places).</p>
+<p>The vertices are numbered 1 to 22 from Limbe Market (1) to Blantyre Market (22). There are four main ways across the city:</p>
+<ul>
+<li>a <b>northern route</b> through Limbe Health Centre, St Columba and Stereo Night Club;</li>
+<li>a <b>central route</b> through Puma Energy Kanjedza, Automotive Products Limited and Kamba Pork Market;</li>
+<li>a <b>southern route</b> through Yanakis Roundabout, Reunion Insurance Roundabout, Independence Arch and Chichiri Shopping Mall;</li>
+<li>a <b>fourth route</b> through Yanakis Roundabout, Reunion Insurance Roundabout, Independence Arch, Chichiri Shopping Mall, Castel, HHI, Blantyre Clock Tower and PA Nandos to Blantyre Market.</li>
+</ul>
+<p>Cross roads join the routes, so a traveller has many possible paths.</p>
+<p>The graph is <b>undirected</b> because the roads carry traffic in both directions, so the distance from A to B equals the distance from B to A. It is <b>weighted</b> because the roads have different lengths, and it is <b>simple</b> (no road goes from a place back to itself, and there is at most one road between two places).</p>
 <p>Distances are stored in the data file as whole metres (for example 0.45 km is stored as 450), and the program shows them in kilometres. Whole numbers avoid rounding errors when distances are added.</p>
-<div class="stats">
-  <div><b>${V}</b><span>vertices (places)</span></div><div><b>${E}</b><span>edges (roads)</span></div>
-  <div><b>${km(totalM)}</b><span>km of road in total</span></div><div><b>${km(full.dist[LIMBE])}</b><span>km, shortest route Limbe Market to Blantyre Market</span></div>
-</div>
-<p>Formally <i>G = (V, E, w)</i> with |V| = ${V}, |E| = ${E} and w : E → ℕ (metres). The full data is in <code>data/blantyre_roads.csv</code> in the repository, one road per line as <code>place_a,place_b,metres</code>.</p>
-<h3>Vertices and adjacency list</h3>
+<p>The graph has a total of ${V} vertices, ${E} edges, a total distance of ${km(totalM)} km and a shortest route of ${km(full.dist[LIMBE])} km from Limbe Market to Blantyre Market.</p>
+<h3>Vertices and their neighbours</h3>
 <table><thead><tr><th>No.</th><th>Place</th><th>Area</th><th>Degree</th><th>Neighbours (distance in km)</th></tr></thead><tbody>${nodeRows}</tbody></table>
+<p class="small">Degree = the number of roads that meet at a place.</p>
 <h3>Edges (weights in km)</h3>
 <div class="two">${edgeTable(edgeRows.slice(0, half))}${edgeTable(edgeRows.slice(half))}</div>
 </section>
 
 <section>
 <h2>2. Drawing and description of the graph <span class="q">Q2 · 10 marks</span></h2>
-<p><b>Paper drawing.</b> Figure 1 is the group's hand-drawn graph. Each place is drawn as a numbered circle (vertex) with its name beside it. Each road is a straight line (edge) between two circles. Because the graph is undirected, the lines have no arrowheads. The distance in km is written along each line. Limbe Market (1) is on the left and Blantyre Market (22) on the right.</p>
-<figure class="photo"><img src="hand_drawn_graph.jpg" alt="Hand-drawn graph of the Blantyre city road network"><figcaption>Figure 1. Hand-drawn graph, from Limbe Market (1) to Blantyre Market (22).</figcaption></figure>
-<p>Figure 2 is the same graph drawn by the program, using the same layout. It is used for the rest of the report because it can highlight routes and trees.</p>
-<figure class="map-fig wide">${M.drawMap(G, {})}<figcaption>Figure 2. The graph drawn by the program, G = (V, E), |V| = ${V}, |E| = ${E}. Weights in km.</figcaption></figure>
+<p>Each place is drawn as a numbered circle (vertex) with its name beside it. Each road is a straight line (edge) between two circles. Because the graph is undirected, the lines have no arrowheads. The distance in km is written along each line. Limbe Market (1) is on the left and Blantyre Market (22) on the right.</p>
+<figure class="photo"><img src="hand_drawn_graph.jpg" alt="Hand-drawn graph of the Blantyre city road network"><figcaption>Figure 1. Our hand-drawn graph, from Limbe Market (1) to Blantyre Market (22).</figcaption></figure>
+${fig("fig2", M.drawMap(G, {}), `Figure 2. The same graph drawn by our program. Distances in km.`)}
 <h3>Description</h3>
 <ul>
-<li><b>Connected:</b> there is a path between every pair of places, so G has a single component. Test T10 confirms this: all ${V * V} source–target pairs have a finite distance.</li>
-<li><b>Sparse:</b> a simple graph on ${V} vertices can have at most ${V} × ${V - 1} / 2 = ${(V * (V - 1)) / 2} edges. G has ${E}, a density of ${E} / ${(V * (V - 1)) / 2} ≈ ${(E / ((V * (V - 1)) / 2)).toFixed(2)}. This is typical of road networks and is why an adjacency list is the right representation.</li>
-<li><b>Degrees:</b> the sum of degrees is 2|E| = ${2 * E} (handshake lemma), so the average degree is ${(2 * E / V).toFixed(2)}. Red Cross Malawi has the highest degree (${maxDeg}): it is the hub where the central and southern routes meet before Blantyre. Liquid Lounge Roundabout, Automotive Products Limited and Chichiri Shopping Mall have degree 4. ${deg2.length} places have degree 2: ${deg2.join(", ")}.</li>
-<li><b>Cycles:</b> G contains many cycles, for example Limbe Market–Limbe Health Centre–Liquid Lounge Roundabout–Limbe Market (0.45 + 0.35 + 0.7 = 1.5 km) and Red Cross Malawi–Mandala–Blantyre Market–PA Nandos–Blantyre Clock Tower–Red Cross Malawi. The cyclomatic number |E| − |V| + 1 = ${E - V + 1} is the number of independent cycles, and also the number of roads that can be removed while keeping all places connected (see the MST in section 6).</li>
-<li><b>No bridges:</b> removing any single road leaves the graph connected, because every road lies on a cycle. If one road is closed, for example for repairs, every place can still be reached by another route.</li>
-<li><b>Longest and shortest roads:</b> ${N(longest.u)}–${N(longest.v)} (${km(longest.w)} km) is the longest. ${N(shortest.u)}–${N(shortest.v)} (${km(shortest.w)} km) is the shortest.</li>
+<li><b>Connected:</b> you can get from any place to any other place, so the graph is in one piece.</li>
+<li><b>Sparse (few roads):</b> with ${V} places, the most roads possible (every place joined to every other place) would be ${V} × ${V - 1} ÷ 2 = ${(V * (V - 1)) / 2}. Our graph has only ${E}, about ${Math.round((100 * E) / ((V * (V - 1)) / 2))}% of that. Road networks are usually like this. Because of this, the program stores, for each place, just a list of its neighbours (an adjacency list) instead of a big ${V} × ${V} table.</li>
+<li><b>Degrees:</b> if you add up the degrees of all places you get ${2 * E}, which is twice the number of roads, because every road has two ends. On average a place has ${(2 * E / V).toFixed(2)} roads. Red Cross Malawi has the most roads (${maxDeg}): it is the hub where the central and southern routes meet before Blantyre. Liquid Lounge Roundabout, Automotive Products Limited and Chichiri Shopping Mall have 4 roads each. ${deg2.length} places have only 2 roads: ${deg2.join(", ")}.</li>
+<li><b>Cycles (loops):</b> the graph has many loops, where you can leave a place and come back by a different road. For example: Limbe Market → Limbe Health Centre → Liquid Lounge Roundabout → Limbe Market (0.45 + 0.35 + 0.7 = 1.5 km), and Red Cross Malawi → Mandala → Blantyre Market → PA Nandos → Blantyre Clock Tower → Red Cross Malawi. Because there are ${E} roads and ${V} places, ${E} − ${V} + 1 = <b>${E - V + 1}</b> roads could be removed and every place would still be reachable (see the MST in section 6).</li>
+<li><b>No single weak road:</b> if any one road is closed, for example for repairs, every place can still be reached by another route. This is because every road is part of a loop.</li>
+<li><b>Longest and shortest roads:</b> ${N(longest.u)} to ${N(longest.v)} (${km(longest.w)} km) is the longest. ${N(shortest.u)} to ${N(shortest.v)} (${km(shortest.w)} km) is the shortest.</li>
 </ul>
 </section>
 
 <section>
 <h2>3. How Dijkstra's algorithm works on the graph <span class="q">Q3 · 15 marks</span></h2>
-<p>Dijkstra's algorithm finds the shortest distance from one <b>source</b> vertex to every other vertex in a graph with non-negative weights. It keeps a tentative distance <i>d[v]</i> for every place, starting at 0 for the source and ∞ for the rest. At each step it <b>settles</b> the unsettled place with the smallest tentative distance; that distance is now final, because every other route would have to leave through a place that is already at least as far away and the weights are never negative. It then <b>relaxes</b> each road (u, v) out of the settled place: if d[u] + w(u, v) &lt; d[v], it lowers d[v] and records u as the previous place on v's route.</p>
-<pre class="code">DIJKSTRA(G, s)
-  for each vertex v:  d[v] ← ∞,  prev[v] ← NIL
-  d[s] ← 0;  Q ← min-priority queue containing (0, s)
-  while Q is not empty:
-      (du, u) ← EXTRACT-MIN(Q)
-      if u is already settled: continue          // stale entry
-      mark u settled
-      for each edge (u, v, w):
-          if v not settled and du + w &lt; d[v]:
-              d[v] ← du + w;  prev[v] ← u;  INSERT(Q, (d[v], v))</pre>
+<p>Dijkstra's algorithm finds the shortest distance from one starting place to every other place. It works when no distance is negative, which is always true for roads.</p>
+<p><b>The idea in plain words:</b></p>
+<ol>
+<li>Give the starting place a distance of 0. Give every other place a distance of ∞ (infinity), meaning “not reached yet”.</li>
+<li>Pick the place with the smallest distance that is not finished yet. Mark it <b>finished</b>: its distance is now final and will never change.</li>
+<li>Look at each road from that place. If going through it gives a neighbour a shorter distance than the one it has, write down the new, shorter distance and remember which place we came from.</li>
+<li>Repeat steps 2 and 3 until every place is finished.</li>
+</ol>
+<p><b>Why a finished place never changes:</b> we always finish the closest unfinished place. Any other way to reach it would have to go through a place that is already further away, and since distances are never negative, that way cannot be shorter.</p>
+<p>In the program, the unfinished places are kept in a <b>priority queue</b>, a list that always gives back the place with the smallest distance first.</p>
+<pre class="code">DIJKSTRA(graph, start)
+  set distance of every place to ∞ and previous place to none
+  distance[start] = 0
+  put (0, start) in the priority queue
+  while the queue is not empty:
+      take out the place u with the smallest distance
+      if u is already finished: skip it (it is an old, out-of-date entry)
+      mark u as finished
+      for each road from u to v with length w:
+          if v is not finished and distance[u] + w &lt; distance[v]:
+              distance[v] = distance[u] + w
+              previous[v] = u
+              put (distance[v], v) in the queue</pre>
 <h3>Worked example: all shortest routes from Limbe Market</h3>
-<p>We run the algorithm with Limbe Market as the source. The table shows, for each of the ${V} steps, which place is settled, the roads that improved a tentative distance, and the reached-but-unsettled places afterwards (in order of distance, all in km). A place leaves the queue in exactly the order of its final distance.</p>
-<table class="steps"><thead><tr><th>Step</th><th>Settle</th><th>d (km)</th><th>Relaxations (old → new)</th><th>Tentative distances after the step</th></tr></thead><tbody>${stepRows}</tbody></table>
-<p>Several steps show the algorithm correcting itself. In step 6, Puma Energy Kanjedza sets Independence Arch to 1.7 + 2.9 = 4.6 km. In step 7, Reunion Insurance Roundabout finds a shorter road, 2.3 + 1.0 = 3.3 km, so Independence Arch is updated to 3.3. In step 9, Automotive Products Limited lowers Chichiri Shopping Mall from 6.2 to 3.3 + 1.5 = 4.8 km. In step 12, Kamba Pork Market lowers Red Cross Malawi from 7.1 (via Chichiri) to 5.8 + 1.2 = 7.0 km. Steps such as MASM change nothing, because every neighbour already has a shorter distance.</p>
+<p>We start at Limbe Market. The table shows each of the ${V} steps: which place is finished, which neighbours got a shorter distance, and the distances of the places that are reached but not finished yet (smallest first, all in km).</p>
+<table class="steps"><thead><tr><th>Step</th><th>Finish</th><th>Distance (km)</th><th>Shorter distances found (old → new)</th><th>Waiting places after the step</th></tr></thead><tbody>${stepRows}</tbody></table>
+<p>Sometimes the algorithm finds a better way to a place it has already reached:</p>
+<ul>
+<li>In step 6, Puma Energy Kanjedza gives Independence Arch a distance of 1.7 + 2.9 = 4.6 km. In step 7, Reunion Insurance Roundabout finds a shorter way: 2.3 + 1.0 = 3.3 km.</li>
+<li>In step 9, Automotive Products Limited lowers Chichiri Shopping Mall from 6.2 km to 3.3 + 1.5 = 4.8 km.</li>
+<li>In step 12, Kamba Pork Market lowers Red Cross Malawi from 7.1 km (through Chichiri) to 5.8 + 1.2 = 7.0 km.</li>
+</ul>
+<p>Some steps, such as MASM in step 5, change nothing, because every neighbour already has a shorter distance.</p>
 <h3>Result: shortest distances and routes from Limbe Market</h3>
 <table><thead><tr><th>Place</th><th>Distance (km)</th><th>Previous place</th><th>Shortest route</th></tr></thead><tbody>${finalRows}</tbody></table>
-<p>The previous-place pointers form the <b>shortest-path tree</b> rooted at Limbe Market (Figure 3). Reading the route to any place means following the pointers back from that place to Limbe Market. For Blantyre Market: Blantyre Market ← Mandala ← Red Cross Malawi ← Kamba Pork Market ← Automotive Products Limited ← Puma Energy Kanjedza ← Liquid Lounge Roundabout ← Limbe Market, which gives</p>
-<p class="result-line">Limbe Market → Liquid Lounge Roundabout → Puma Energy Kanjedza → Automotive Products Limited → Kamba Pork Market → Red Cross Malawi → Mandala → Blantyre Market = 0.7 + 1.0 + 1.6 + 2.5 + 1.2 + 0.55 + 0.21 = 7.76 km</p>
-<p>This is only 0.1 km shorter than going through Chichiri Shopping Mall (0.7 + 1.0 + 1.6 + 1.5 + 2.3 + 0.55 + 0.21 = 7.86 km). The southern route through Independence Arch and Chichiri is 3.3 + 2.9 + 2.3 + 0.55 + 0.21 = 9.26 km, and the northern route through Stereo Night Club, Rosewood Mall and CI Primary School is 3.3 + 2.5 + 0.3 + 0.7 + 1.6 + 0.3 = 8.7 km.</p>
-<figure class="map-fig wide">${M.drawMap(G, { mst: sptEdges })}<figcaption>Figure 3. Shortest-path tree from Limbe Market (blue). Dashed roads are not used by any shortest route from Limbe Market.</figcaption></figure>
+<p>To read the route to a place, start at that place and follow the “previous place” column back to Limbe Market. For Blantyre Market: Blantyre Market ← Mandala ← Red Cross Malawi ← Kamba Pork Market ← Automotive Products Limited ← Puma Energy Kanjedza ← Liquid Lounge Roundabout ← Limbe Market. So the shortest route is:</p>
+<p class="result-line">Limbe Market → Liquid Lounge Roundabout → Puma Energy Kanjedza → Automotive Products Limited → Kamba Pork Market → Red Cross Malawi → Mandala → Blantyre Market = 0.7 + 1.0 + 1.6 + 2.5 + 1.2 + 0.55 + 0.21 = ${km(full.dist[LIMBE])} km</p>
+<p>Comparing with the other ways to Blantyre Market:</p>
+<table><thead><tr><th>Way</th><th>Sum</th><th>Distance</th></tr></thead><tbody>
+<tr><td>Central route: Limbe Market → Liquid Lounge Roundabout → Puma Energy Kanjedza → Automotive Products Limited → Kamba Pork Market → Red Cross Malawi → Mandala → Blantyre Market (shortest)</td><td>0.7 + 1.0 + 1.6 + 2.5 + 1.2 + 0.55 + 0.21</td><td class="num"><b>7.76 km</b></td></tr>
+<tr><td>Same start, but through Chichiri Shopping Mall instead of Kamba Pork Market</td><td>0.7 + 1.0 + 1.6 + 1.5 + 2.3 + 0.55 + 0.21</td><td class="num">7.86 km</td></tr>
+<tr><td>Northern route: Limbe Market → Limbe Health Centre → St Columba → Stereo Night Club → Rosewood Mall → Red Cross Malawi → Mandala → Blantyre Market</td><td>0.45 + 3.2 + 3.1 + 0.7 + 1.4 + 0.55 + 0.21</td><td class="num">9.61 km</td></tr>
+<tr><td>Southern route: Limbe Market → Yanakis Roundabout → Reunion Insurance Roundabout → Independence Arch → Chichiri Shopping Mall → Red Cross Malawi → Mandala → Blantyre Market</td><td>1.2 + 1.1 + 1.0 + 2.9 + 2.3 + 0.55 + 0.21</td><td class="num">9.26 km</td></tr>
+<tr><td>Fourth route: Limbe Market → Yanakis Roundabout → Reunion Insurance Roundabout → Independence Arch → Chichiri Shopping Mall → Castel → HHI → Blantyre Clock Tower → PA Nandos → Blantyre Market</td><td>1.2 + 1.1 + 1.0 + 2.9 + 1.9 + 1.4 + 2.5 + 1.2 + 1.2</td><td class="num">14.4 km</td></tr>
+</tbody></table>
+<p>The previous places together form a tree of shortest routes from Limbe Market (Figure 3).</p>
+${fig("fig3", M.drawMap(G, { mst: sptEdges }), "Figure 3. Shortest routes from Limbe Market (blue). Dashed roads are not used by any shortest route from Limbe Market.")}
 </section>
 
 <section>
 <h2>4. Implementation <span class="q">Q4 · 10 marks</span></h2>
-<p>The algorithm is implemented in <b>C++17</b> with only the standard library. The repository is organised as follows:</p>
-<table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody>
-<tr><td><code>data/blantyre_roads.csv</code></td><td>The graph: one road per line, <code>place_a,place_b,metres</code>.</td></tr>
-<tr><td><code>src/graph.hpp</code></td><td>Graph class (adjacency list), Dijkstra, path reconstruction, Kruskal (with union–find) and Prim.</td></tr>
-<tr><td><code>src/main.cpp</code></td><td>Command line program: shortest route, step-by-step trace, distances from a place, MST, and an interactive menu.</td></tr>
-<tr><td><code>tests/tests.cpp</code></td><td>25 automated tests (section 5).</td></tr>
-<tr><td><code>docs/</code></td><td>Web version of the same algorithms in JavaScript, published with GitHub Pages (section 8).</td></tr>
+<p>The program is written in <b>C++</b> (C++17) using only the standard library. The files are:</p>
+<table><thead><tr><th>File</th><th>What it does</th></tr></thead><tbody>
+<tr><td><code>data/blantyre_roads.csv</code></td><td>The graph: one road per line, written as <code>place_a,place_b,metres</code>.</td></tr>
+<tr><td><code>src/graph.hpp</code></td><td>The graph, Dijkstra's algorithm, and the two MST algorithms (Kruskal and Prim).</td></tr>
+<tr><td><code>src/main.cpp</code></td><td>The program you run: shortest route, step-by-step trace, distances from a place, MST, and a menu.</td></tr>
+<tr><td><code>tests/tests.cpp</code></td><td>25 automatic tests (section 5).</td></tr>
+<tr><td><code>docs/</code></td><td>The web version of the same algorithms in JavaScript (section 8).</td></tr>
 <tr><td><code>Makefile</code></td><td><code>make</code> builds everything, <code>make test</code> runs the tests.</td></tr>
 </tbody></table>
-<h3>Design decisions</h3>
+<h3>How it is built</h3>
 <ul>
-<li><b>Adjacency list</b> (<code>vector&lt;vector&lt;pair&lt;int, long long&gt;&gt;&gt;</code>): uses O(V + E) memory and lets Dijkstra visit only the real neighbours of a place. An adjacency matrix would need ${V} × ${V} = ${V * V} cells for ${E} roads.</li>
-<li><b>Place names are mapped to integer IDs</b> with a <code>std::map</code>, so the algorithms work on fast array indices while the user types names.</li>
-<li><b>Distances in whole metres.</b> Storing 0.45 km as 450 m keeps all arithmetic in integers, so sums are exact and comparisons such as d[u] + w &lt; d[v] never suffer from floating-point rounding. Output is converted to km.</li>
-<li><b>Binary heap priority queue</b> (<code>std::priority_queue</code> with <code>std::greater</code>) holding (distance, place) pairs. Instead of a decrease-key operation, a place is pushed again when its distance improves, and outdated entries are skipped when popped (“lazy deletion”). This keeps the code short and gives <b>O((V + E) log V)</b> time.</li>
-<li><b>Path reconstruction</b> uses the <code>prev[]</code> array, following pointers back from the target and reversing.</li>
-<li><b>Input validation:</b> negative weights are rejected (Dijkstra is incorrect with them), as are self loops, malformed lines, non-numeric distances, missing files and unknown place names. Unreachable places are reported as “No route”.</li>
+<li><b>Neighbour lists (adjacency list):</b> for each place the program keeps a list of (neighbour, distance) pairs. This uses little memory and lets Dijkstra look only at real roads. A full ${V} × ${V} table would have ${V * V} boxes for only ${E} roads.</li>
+<li><b>Names to numbers:</b> each place name is given a number (0, 1, 2, …). The algorithms work with numbers because they are fast to look up, while the user types names.</li>
+<li><b>Distances in whole metres:</b> 0.45 km is stored as 450 m. Adding whole numbers is always exact, so comparisons never go wrong because of rounding. Results are shown in km.</li>
+<li><b>Priority queue:</b> C++'s <code>priority_queue</code> always gives back the place with the smallest distance. When a place gets a shorter distance it is simply added again; the old entry is skipped when it comes out. This keeps the code short. The running time grows roughly like (places + roads) × log(places), which is fast.</li>
+<li><b>Rebuilding the route:</b> the <code>prev</code> list remembers where each place was reached from. Following it backwards from the destination and reversing gives the route.</li>
+<li><b>Checking input:</b> the program rejects negative distances (Dijkstra does not work with them), roads from a place to itself, badly written lines, distances that are not whole numbers, missing files and unknown place names. If a place cannot be reached it says “No route”.</li>
 </ul>
-<h3>Core code: Dijkstra</h3>
+<h3>Main code: Dijkstra</h3>
 <pre class="code">${dijkstraCode}</pre>
 <h3>Building and running</h3>
 <pre class="code">$ make                       # builds ./roads and ./run_tests
 $ ./roads path "Limbe Market" "Blantyre Market"
-${esc(run('./roads path "Limbe Market" "Blantyre Market"'))}$ ./roads trace "Red Cross Malawi" "Blantyre Clock Tower"   # step-by-step dry run
+${esc(run('./roads path "Limbe Market" "Blantyre Market"'))}$ ./roads trace "Red Cross Malawi" "Blantyre Clock Tower"   # step by step
 $ ./roads all "Limbe Market"        # distances from Limbe Market to every place
 $ ./roads mst kruskal               # minimum spanning tree
-$ ./roads                           # interactive menu
+$ ./roads                           # menu
 $ make test                         # run the 25 tests</pre>
 </section>
 
 <section>
 <h2>5. Testing and dry run <span class="q">Q5 · 20 marks</span></h2>
-<h3>Test strategy</h3>
-<p>The tests in <code>tests/tests.cpp</code> cover four groups: (a) loading the graph, (b) known shortest routes worked out by hand, (c) an independent cross-check of every pair of places against a different algorithm (Floyd–Warshall), and (d) error handling and edge cases. Each test prints its input, the expected output and the actual output. The table below was produced by running <code>make test</code>.</p>
+<h3>What we tested</h3>
+<p>The tests in <code>tests/tests.cpp</code> are in four groups:</p>
+<ol>
+<li>Loading the graph correctly.</li>
+<li>Shortest routes that we worked out by hand.</li>
+<li>Checking every pair of places against a different method (Floyd–Warshall), to make sure Dijkstra gives the same answer.</li>
+<li>Wrong input and unusual cases.</li>
+</ol>
+<p>Each test shows its input, the expected output and the actual output. The table was produced by running <code>make test</code>.</p>
 <p class="result-line">${esc(summary)}</p>
 <table class="tests"><thead><tr><th>ID</th><th>Test</th><th>Input</th><th>Expected</th><th>Actual</th><th>Result</th></tr></thead><tbody>${testRows}</tbody></table>
-<h3>How the expected values were checked</h3>
-<p>Each expected route in T03–T09 was worked out by hand from the drawing and compared against the other possible routes. For T04 (Limbe Market → Blantyre Market) we compared the central route via Kamba Pork Market (7.76 km), the route via Chichiri Shopping Mall (7.86 km), the northern route via Stereo Night Club (8.7 km) and the southern route via Independence Arch (9.26 km). Test T10 then checks every one of the ${V * V} pairs against Floyd–Warshall, a completely different algorithm, and checks that every route the program prints adds up to the distance it reports. This guards against mistakes in the hand calculations as well as in the code.</p>
+<h3>How we checked the expected answers</h3>
+<p>For each route in tests T03 to T09 we worked out the answer by hand from the drawing and compared it with the other possible routes. For example, for T04 (Limbe Market → Blantyre Market) we compared the five ways in the table in section 3. Test T10 then checks all ${V * V} pairs of places against Floyd–Warshall, a completely different method, and checks that every route the program prints really adds up to the distance it reports. This catches mistakes in our hand working as well as in the code.</p>
 <h3>Errors</h3>
-<p>Tests T11–T16 check that bad input produces a clear error message instead of a crash or a wrong answer. The same errors appear in the command line program:</p>
+<p>Tests T11 to T16 check that wrong input gives a clear message instead of a crash or a wrong answer. The program shows the same messages:</p>
 <pre class="code">$ ./roads path "Limbe Market" Lilongwe
 ${esc(errOut('./roads path "Limbe Market" Lilongwe'))}$ ./roads path "limbe market" Mandala
 ${esc(errOut('./roads path "limbe market" Mandala'))}$ ./roads --data no_such_file.csv path "Limbe Market" Mandala
 ${esc(errOut('./roads --data no_such_file.csv path "Limbe Market" Mandala'))}</pre>
-<p>Edge cases (T17–T20) use small separate graphs: a place with no road link to the rest (Chileka, joined only to Lunzu) is reported as unreachable, a zero-length road is allowed, and when two roads join the same places the shorter one is used. No test failed in the final run, and no crashes or incorrect results were found.</p>
+<p>Tests T17 to T20 use small separate graphs: a place with no road to the rest (Chileka, joined only to Lunzu) is reported as unreachable; a road of length 0 is allowed; and when two roads join the same two places, the shorter one is used. All tests passed, and no crashes or wrong results were found.</p>
 
-<h3>Dry run 1: Red Cross Malawi → Blantyre Clock Tower, tracing the priority queue</h3>
-<p>This dry run follows the code line by line, showing the real contents of the priority queue, including stale entries left behind by lazy deletion. Entries are written (place, distance in km) and the queue is shown sorted, smallest first.</p>
-<table class="steps"><thead><tr><th>Iter.</th><th>Action</th><th>Relaxing each road of the settled place</th><th>Priority queue after</th></tr></thead><tbody>${DR.rows}</tbody></table>
-<p>This dry run is interesting because the direct road from Red Cross Malawi to Blantyre Clock Tower (3.4 km) is <b>not</b> the shortest route. The clock tower first gets distance 3.4 in iteration 1, then PA Nandos improves it to 3.16 in iteration 8. The old entry (Blantyre Clock Tower, 3.4) stays in the queue as a stale entry, but the target is settled at 3.16 before it is ever popped.</p>
-<p><b>Result:</b> following prev[] back from Blantyre Clock Tower gives ${DR.path.join(" → ")}, a distance of <b>${km(DR.dist)} km</b>. The program prints the same:</p>
+<h3>Dry run 1: Red Cross Malawi → Blantyre Clock Tower</h3>
+<p>This dry run follows the code line by line and shows exactly what is inside the priority queue after each step. Entries are written (place, distance in km), smallest first.</p>
+<table class="steps"><thead><tr><th>Step</th><th>Action</th><th>Checking each road of the finished place</th><th>Priority queue after</th></tr></thead><tbody>${DR.rows.replace(/stale entry, skip/g, "old entry, skip")}</tbody></table>
+<p>This example is interesting because the direct road from Red Cross Malawi to Blantyre Clock Tower (3.4 km) is <b>not</b> the shortest way. The clock tower first gets 3.4 km in step 1. In step ${iterOf}, the route through PA Nandos gives it ${km(DR.dist)} km. The old entry (Blantyre Clock Tower, 3.4) stays in the queue, but the clock tower is finished at ${km(DR.dist)} km before that old entry is ever taken out.</p>
+<p><b>Result:</b> following the previous places back from Blantyre Clock Tower gives ${DR.path.join(" → ")}, a distance of <b>${km(DR.dist)} km</b>. The program prints the same:</p>
 <pre class="code">$ ./roads path "Red Cross Malawi" "Blantyre Clock Tower"
 ${esc(run('./roads path "Red Cross Malawi" "Blantyre Clock Tower"'))}</pre>
 
 <h3>Dry run 2: program trace for Limbe Market → Blantyre Market</h3>
-<p>The <code>trace</code> command prints each step the algorithm takes and stops once the destination is settled.</p>
+<p>The <code>trace</code> command prints each step and stops once the destination is finished. It matches steps 1 to ${full.steps.findIndex((s) => s.settled === LIMBE) + 1} of the table in section 3.</p>
 <pre class="code">$ ./roads trace "Limbe Market" "Blantyre Market"
 ${esc(traceOut)}</pre>
 </section>
 
 <section>
 <h2>6. Does the graph have a minimum spanning tree? <span class="q">Q6 · 10 marks</span></h2>
-<p><b>Yes.</b> A spanning tree is a subset of the edges that connects all the vertices with no cycles; it has exactly |V| − 1 edges. A minimum spanning tree (MST) is a spanning tree with the smallest possible total weight. An undirected graph has a spanning tree if and only if it is <b>connected</b>, and then it also has a minimum one, because there are finitely many spanning trees and one of them must have the smallest total. Our graph is undirected, weighted and connected (section 2), so it has an MST.</p>
-<p>The MST of our graph has <b>${K.edges.length} edges</b> and a total length of <b>${km(K.total)} km</b>, compared with ${km(totalM)} km for all ${E} roads. The other ${E - K.edges.length} roads (the cyclomatic number from section 2) each close a cycle and are not needed for connectivity.</p>
-<figure class="map-fig wide">${M.drawMap(G, { mst: K.edges })}<figcaption>Figure 4. Minimum spanning tree (blue, ${km(K.total)} km). Dashed roads are not in the MST.</figcaption></figure>
-<p><b>The MST is unique.</b> Some roads have equal lengths (for example several roads of 1.0 km and of 1.2 km), which can sometimes allow more than one MST. We checked every road that is not in the tree: in each case it is strictly longer than every road on the tree path between its two places, so no swap gives an equal total. The MST is therefore the only one.</p>
+<p><b>Yes.</b></p>
+<p>A <b>spanning tree</b> is a set of roads that connects all the places, with no loops. With ${V} places it always has exactly ${V} − 1 = ${V - 1} roads. A <b>minimum spanning tree (MST)</b> is the spanning tree with the smallest total length.</p>
+<p>A graph has a spanning tree when all its places are connected, and our graph is connected (section 2). There are only a limited number of possible spanning trees, so one of them must be the shortest. So our graph has an MST.</p>
+<p>Our MST has <b>${K.edges.length} roads</b> with a total length of <b>${km(K.total)} km</b>, compared with ${km(totalM)} km for all ${E} roads. The other ${E - K.edges.length} roads each close a loop, so they are not needed to keep every place connected.</p>
+${fig("fig4", M.drawMap(G, { mst: K.edges }), `Figure 4. Minimum spanning tree (blue, ${km(K.total)} km). Dashed roads are not in the MST.`)}
+<p><b>There is only one MST.</b> Some roads have the same length (for example several roads of 1.0 km and of 1.2 km), and sometimes that allows two different MSTs with the same total. We checked every road that is not in the tree: each one is longer than every road on the tree path between its two ends, so swapping it in would always make the total longer.</p>
 <h3>What the MST represents</h3>
-<p>The MST is the <b>shortest total length of road that still connects every place</b> to every other place. For example, it does not use the direct road Limbe Market–Liquid Lounge Roundabout (0.7 km), because the two places are already joined through Limbe Health Centre with shorter roads (0.45 + 0.35 km). Between Limbe Market and Blantyre Market this answers questions such as:</p>
+<p>The MST is the <b>shortest total length of road that still connects every place</b>. For example, it does not use the direct road from Limbe Market to Liquid Lounge Roundabout (0.7 km), because the two places are already joined through Limbe Health Centre by shorter roads (0.45 + 0.35 km). In real life the MST answers questions like:</p>
 <ul>
-<li><b>Laying pipes or cables along the roads.</b> Blantyre Water Board pipes, ESCOM power lines or a fibre-optic network are usually laid along road reserves. Connecting all ${V} places along the MST needs ${km(K.total)} km of pipe or cable instead of ${km(totalM)} km.</li>
-<li><b>Road maintenance on a limited budget.</b> If Blantyre City Council could only maintain ${K.edges.length} roads, the MST keeps every place from Limbe Market to Blantyre Market reachable for the least total length of road.</li>
-<li><b>Emergency access.</b> During heavy rains, when some roads flood, the MST is a minimal backbone that must stay open so that every place, including Limbe Health Centre and Red Cross Malawi, can still be reached.</li>
+<li><b>Laying pipes or cables along the roads.</b> Water pipes, ESCOM power lines or internet cables are usually laid along roads. Connecting all ${V} places along the MST needs ${km(K.total)} km of pipe or cable instead of ${km(totalM)} km.</li>
+<li><b>Road repairs on a small budget.</b> If Blantyre City Council could only maintain ${K.edges.length} roads, the MST keeps every place from Limbe Market to Blantyre Market reachable with the least road to look after.</li>
+<li><b>Emergencies.</b> In heavy rain, when some roads flood, the MST is the smallest set of roads that must stay open so that every place, including Limbe Health Centre and Red Cross Malawi, can still be reached.</li>
 </ul>
-<p><b>What the MST does not represent:</b> it is not a set of shortest routes. In the MST the only route from Limbe Market to Blantyre Market is ${mstPath.path}, which is <b>${km(mstPath.d)} km</b>, compared with the ${km(full.dist[LIMBE])} km found by Dijkstra. The MST minimises the total length of the whole network; Dijkstra minimises the length of one journey.</p>
+<p><b>What the MST is not:</b> it does not give the shortest route between two places. In the MST the only way from Limbe Market to Blantyre Market is ${mstPath.path}, which is <b>${km(mstPath.d)} km</b>, while Dijkstra found ${km(full.dist[LIMBE])} km. The MST keeps the <i>whole network</i> as short as possible; Dijkstra makes <i>one journey</i> as short as possible.</p>
 </section>
 
 <section>
 <h2>7. Which MST algorithm we would use, and why <span class="q">Q7 · 10 marks</span></h2>
 <table><thead><tr><th></th><th>Kruskal</th><th>Prim</th></tr></thead><tbody>
-<tr><td>Idea</td><td>Sort all roads by length. Add each road unless it joins two places that are already connected (it would make a cycle).</td><td>Start from one place. Repeatedly add the shortest road from the tree to a place not yet in the tree.</td></tr>
-<tr><td>Data structure</td><td>Sorted edge list + union–find (disjoint sets)</td><td>Priority queue + adjacency list</td></tr>
-<tr><td>Time</td><td>O(E log E)</td><td>O(E log V) with a binary heap; O(V²) with an array</td></tr>
-<tr><td>Best for</td><td>Sparse graphs, data given as an edge list</td><td>Dense graphs, data given as an adjacency matrix</td></tr>
-<tr><td>On our graph</td><td>${E} × log₂${E} ≈ ${log2(E)} basic steps</td><td>${E} × log₂${V} ≈ ${log2(V)} basic steps</td></tr>
+<tr><td>Idea</td><td>Sort all roads from shortest to longest. Take each road in turn, unless its two places are already connected (it would make a loop).</td><td>Start from one place. Keep adding the shortest road that leads from the tree to a new place.</td></tr>
+<tr><td>What it needs</td><td>A list of roads, and a quick way to check whether two places are already connected (called union–find)</td><td>A priority queue and the neighbour lists</td></tr>
+<tr><td>Speed</td><td>Mainly the time to sort the roads</td><td>Mainly the time to manage the priority queue</td></tr>
+<tr><td>Best for</td><td>Graphs with few roads, stored as a list of roads</td><td>Graphs with very many roads, stored as a big table</td></tr>
 </tbody></table>
-<p><b>We would use Kruskal's algorithm</b>, for these reasons:</p>
+<p><b>We would use Kruskal's algorithm</b>, because:</p>
 <ol>
-<li><b>The graph is sparse</b> (${E} edges, density ${(E / ((V * (V - 1)) / 2)).toFixed(2)}). Kruskal's cost depends on sorting the edges, which is cheap when there are few of them. The O(V²) array version of Prim, which suits dense graphs, would waste work here. For a graph this small the binary-heap versions of both algorithms are practically equal in speed, so the decision comes down to the next points.</li>
-<li><b>Our data is already an edge list.</b> The file <code>blantyre_roads.csv</code> is a list of roads with lengths, which is exactly Kruskal's input. No adjacency structure is needed.</li>
-<li><b>It is easy to explain and check by hand.</b> Kruskal processes roads from shortest to longest and makes one yes/no decision for each, as in the trace below. This matches how a planner would think: “lay the cheapest links first, unless the two places are already connected”.</li>
-<li><b>It handles a disconnected network gracefully.</b> If floods cut the network into pieces (test T18), Kruskal returns a minimum spanning forest, one tree per piece, without any change. Prim only builds the tree of the piece containing its start place.</li>
+<li><b>Our graph has few roads</b> (${E} roads for ${V} places). Kruskal mostly just sorts the roads, which is quick when there are not many. For a graph this small both algorithms are fast, so the next reasons decide.</li>
+<li><b>Our data is already a list of roads.</b> The file <code>blantyre_roads.csv</code> is exactly what Kruskal needs.</li>
+<li><b>It is easy to do and check by hand.</b> You go through the roads from shortest to longest and answer one yes/no question for each, as in the table below. It is also how a planner would think: “build the cheapest links first, unless the two places are already connected”.</li>
+<li><b>It still works if the network is broken into pieces.</b> If floods cut the city into parts (test T18), Kruskal gives a separate tree for each part. Prim only builds the tree for the part where it starts.</li>
 </ol>
-<p>We implemented <b>both</b> algorithms to confirm the answer. Prim gives the same ${km(P.total)} km total from every one of the ${V} possible start places (test T24).</p>
-<h3>Kruskal trace on our graph</h3>
-<table class="compact"><thead><tr><th>#</th><th>Road (sorted by length)</th><th>km</th><th>Decision</th></tr></thead><tbody>${kRows}</tbody></table>
-<p>The tree is complete after ${K.edges.length} additions (the last is ${N(lastAdded.u)}–${N(lastAdded.v)}, ${km(lastAdded.w)} km). The algorithm still scans the remaining longer roads but none can be added. Total: <b>${km(K.total)} km</b>.</p>
-<h3>Prim's trace from Limbe Market (for comparison)</h3>
+<p>We wrote <b>both</b> algorithms to check the answer. Prim gives the same total of ${km(P.total)} km from every one of the ${V} possible starting places (test T24).</p>
+<h3>Kruskal step by step on our graph</h3>
+<table class="compact"><thead><tr><th>#</th><th>Road (shortest first)</th><th>km</th><th>Decision</th></tr></thead><tbody>${kRows.replace(/skip: (.*?) and (.*?) already connected \(cycle\)/g, "skip: $1 and $2 are already connected (would make a loop)")}</tbody></table>
+<p>The tree is complete after ${K.edges.length} roads are added (the last is ${N(lastAdded.u)} – ${N(lastAdded.v)}, ${km(lastAdded.w)} km). The remaining longer roads are all skipped. Total: <b>${km(K.total)} km</b>.</p>
+<h3>Prim step by step from Limbe Market (for comparison)</h3>
 <table class="compact"><thead><tr><th>#</th><th>Shortest road leaving the tree</th><th>km</th></tr></thead><tbody>${pRows}</tbody></table>
 <p>Total: <b>${km(P.total)} km</b>, the same tree as Kruskal, built in a different order.</p>
 </section>
 
 <section>
 <h2>8. Deployment <span class="q">Q8 · 10 marks</span></h2>
-<p>The work is deployed in two ways, so it can be tested with nothing to install.</p>
-<h3>Web application (no installation)</h3>
-<p>The same Dijkstra, Kruskal and Prim algorithms are written in JavaScript in <code>docs/graph.js</code> and run in the browser. The page is hosted free on GitHub Pages:</p>
+<p>The work can be tested in two ways, with nothing to install.</p>
+<h3>Web application</h3>
+<p>The same Dijkstra, Kruskal and Prim algorithms are written in JavaScript in <code>docs/graph.js</code> and run in any web browser. The page is hosted free on GitHub Pages:</p>
 <p class="result-line">${esc(DEMO_URL)}</p>
 <ul>
-<li><b>Shortest route:</b> choose any two places. The page shows the distance, the route highlighted on the map, and the full step-by-step table of the algorithm with the queue after each step.</li>
-<li><b>Spanning tree:</b> shows the MST on the map with the Kruskal decision table, or Prim's order.</li>
-<li><b>Tests:</b> runs the same test cases as the C++ suite in the browser and shows pass or fail for each.</li>
+<li><b>Shortest route:</b> choose any two places. The page shows the distance, the route on the map, and the full step-by-step table of the algorithm.</li>
+<li><b>Spanning tree:</b> shows the MST on the map with Kruskal's decisions, or Prim's order.</li>
+<li><b>Tests:</b> runs the same tests as the C++ program and shows pass or fail for each.</li>
 </ul>
 <h3>C++ program</h3>
-<p>The C++ source is on GitHub at ${esc(GITHUB_URL)}. It can be run without installing anything by opening the repository in GitHub Codespaces (Code → Codespaces → Create), then running <code>make &amp;&amp; ./roads</code> in the terminal. Alternatively, <code>src/graph.hpp</code> and <code>src/main.cpp</code> can be pasted into an online C++ compiler such as OnlineGDB. On a machine with g++ the steps are:</p>
+<p>The C++ code is on GitHub at ${esc(GITHUB_URL)}. To run it without installing anything, open the repository in GitHub Codespaces (Code → Codespaces → Create) and type <code>make &amp;&amp; ./roads</code> in the terminal. Or paste <code>src/graph.hpp</code> and <code>src/main.cpp</code> into an online C++ compiler such as OnlineGDB. On a computer with g++:</p>
 <pre class="code">git clone ${esc(GITHUB_URL)}.git
 cd DSA
 make &amp;&amp; make test
@@ -338,24 +386,60 @@ make &amp;&amp; make test
 <h2>Appendix B: src/main.cpp</h2><pre class="code small">${src("src/main.cpp")}</pre>
 <h2>Appendix C: MST program output</h2><pre class="code small">$ ./roads mst kruskal
 ${esc(mstOut)}</pre>
-</section>
-</body></html>`;
+</section>`;
 
-fs.writeFileSync(path.join(__dirname, "report.html"), html);
+const page = (inner) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Blantyre City Road Network – DSA Assignment</title>
+<style>${css}</style></head><body>${inner}</body></html>`;
+fs.writeFileSync(path.join(__dirname, "report.html"), page(body));
 console.log("wrote report/report.html");
 
 (async () => {
   let pw;
   try { pw = require("playwright"); } catch { pw = require(path.join(execSync("npm root -g").toString().trim(), "playwright")); }
   const browser = await pw.chromium.launch();
-  const page = await browser.newPage();
-  await page.goto("file://" + path.join(__dirname, "report.html"));
-  await page.pdf({
+  const pg = await browser.newPage({ deviceScaleFactor: 2 });
+
+  // PDF
+  await pg.goto("file://" + path.join(__dirname, "report.html"));
+  await pg.pdf({
     path: path.join(__dirname, "DSA_Report.pdf"), format: "A4", printBackground: true,
     margin: { top: "18mm", bottom: "18mm", left: "16mm", right: "16mm" },
     displayHeaderFooter: true, headerTemplate: "<span></span>",
     footerTemplate: '<div style="font-size:8px;width:100%;text-align:center;color:#777">Blantyre city road network · DSA 2026 · page <span class="pageNumber"></span> of <span class="totalPages"></span></div>',
   });
-  await browser.close();
   console.log("wrote report/DSA_Report.pdf");
+
+  // Figures as PNG for the Word version
+  const figDir = path.join(__dirname, "figures");
+  fs.mkdirSync(figDir, { recursive: true });
+  for (const f of FIGS) {
+    await pg.setViewportSize({ width: 1260, height: 640 });
+    await pg.setContent(`<html><head><style>${css} body{margin:0;background:#fff} .map{width:1260px;height:auto}</style></head><body>${f.svg}</body></html>`);
+    await (await pg.$("svg")).screenshot({ path: path.join(figDir, f.id + ".png") });
+  }
+  await browser.close();
+
+  // Word version: same content, figures as images
+  const docHtml = body.replace(/<figure class="map-fig[^"]*" data-fig="(\w+)">[\s\S]*?<\/svg>(<figcaption>[\s\S]*?<\/figcaption>)<\/figure>/g,
+    (_, id, cap) => `<figure><img src="figures/${id}.png" style="width:16cm">${cap}</figure>`)
+    .replace(/<span class="q">(.*?)<\/span>/g, " ($1)");
+  // Column widths for the wide tables, so Word does not squeeze them
+  const COLS = [
+    ["<th>No.</th><th>Place</th><th>Area</th>", [6, 22, 17, 9, 46]],
+    ["<th>Step</th><th>Finish</th>", [7, 18, 11, 30, 34]],
+    ["<th>Place</th><th>Distance (km)</th><th>Previous place</th>", [20, 11, 18, 51]],
+    ["<th>Way</th><th>Sum</th>", [50, 36, 14]],
+    ["<th>ID</th><th>Test</th>", [6, 17, 20, 25, 25, 7]],
+    ["<th>Step</th><th>Action</th>", [7, 18, 45, 30]],
+    ["<th>File</th><th>What it does</th>", [30, 70]],
+  ];
+  let docFinal = docHtml;
+  for (const [sig, w] of COLS)
+    docFinal = docFinal.split("<table><thead><tr>" + sig).join(`<table><colgroup>${w.map((x) => `<col style="width:${x}%">`).join("")}</colgroup><thead><tr>` + sig)
+      .split('<table class="steps"><thead><tr>' + sig).join(`<table><colgroup>${w.map((x) => `<col style="width:${x}%">`).join("")}</colgroup><thead><tr>` + sig)
+      .split('<table class="tests"><thead><tr>' + sig).join(`<table><colgroup>${w.map((x) => `<col style="width:${x}%">`).join("")}</colgroup><thead><tr>` + sig);
+  fs.writeFileSync(path.join(__dirname, "report_docx.html"), `<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body>${docFinal}</body></html>`);
+  execSync(`pandoc report_docx.html -f html -t docx --resource-path=. -o DSA_Report.docx`, { cwd: __dirname });
+  fs.unlinkSync(path.join(__dirname, "report_docx.html"));
+  console.log("wrote report/DSA_Report.docx");
 })();

@@ -234,7 +234,7 @@ function runTests() {
     ["T19", "Zero-length road allowed", "A-B 0, B-C 400, A-C 900", "0.4 km: A > B > C", () => route(parseGraph("A,B,0\nB,C,400\nA,C,900"), "A", "C")],
     ["T20", "Parallel roads: shorter used", "A-B 1000 and A-B 300", "0.3 km: A > B", () => route(parseGraph("A,B,1000\nA,B,300"), "A", "B")],
     ["T21", "Kruskal MST size", "Blantyre graph", "21 edges, spanning=true", () => `${K.edges.length} edges, spanning=${K.spanning}`],
-    ["T22", "Kruskal MST total", "Blantyre graph", "20.66 km", () => `${km(K.total)} km`],
+    ["T22", "Kruskal MST total", "Blantyre graph", "21.96 km", () => `${km(K.total)} km`],
     ["T24", "Prim from every place agrees", "22 start places", "0 mismatches", () => G.names.filter((_, s) => prim(G, s).total !== K.total).length + " mismatches"],
   ];
   let pass = 0, rows = "";

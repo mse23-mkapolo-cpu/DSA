@@ -52,7 +52,7 @@ Kamba Pork Market,Red Cross Malawi,1200
 Stereo Night Club,Rosewood Mall,700
 Rosewood Mall,Red Cross Malawi,1400
 Rosewood Mall,CI Primary School,1600
-CI Primary School,Blantyre Market,300
+CI Primary School,Blantyre Market,2200
 Chichiri Shopping Mall,Red Cross Malawi,2300
 Chichiri Shopping Mall,Castel,1900
 Castel,HHI,1400

@@ -43,4 +43,4 @@ The site appears at `https://<account>.github.io/<repository>/`.
 
 - Limbe Market → Blantyre Market: 7.76 km (Limbe Market → Liquid Lounge Roundabout → Puma Energy Kanjedza →
   Automotive Products Limited → Kamba Pork Market → Red Cross Malawi → Mandala → Blantyre Market)
-- Minimum spanning tree: 21 roads, 20.66 km (out of 46.06 km for all roads)
+- Minimum spanning tree: 21 roads, 21.96 km (out of 47.96 km for all roads)
